@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AssignEval — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --navy:#0D1B2A;--blue:#1565C0;--blue-lt:#1E88E5;
+    --green:#2E7D32;--orange:#E65100;--red:#C62828;
+    --white:#FFFFFF;--off:#F5F7FA;--border:#E2E8F0;
+    --text:#1A2332;--muted:#607D8B;
+  }
+  body{font-family:'DM Sans',sans-serif;background:var(--off);min-height:100vh;
+    display:flex;align-items:center;justify-content:center;}
+
+  .container{width:100%;max-width:440px;padding:20px;}
+
+  /* Logo */
+  .logo{text-align:center;margin-bottom:32px;}
+  .logo h1{font-size:36px;font-weight:700;color:var(--navy);}
+  .logo h1 span{color:var(--orange);}
+  .logo p{font-size:13px;color:var(--muted);margin-top:4px;}
+
+  /* Card */
+  .card{background:var(--white);border-radius:16px;padding:32px;
+    box-shadow:0 4px 24px rgba(0,0,0,0.08);border:1px solid var(--border);}
+
+  /* Tabs */
+  .tabs{display:flex;background:var(--off);border-radius:10px;padding:4px;margin-bottom:24px;gap:4px;}
+  .tab{flex:1;padding:9px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;
+    cursor:pointer;transition:all 0.2s;color:var(--muted);border:none;background:none;
+    font-family:'DM Sans',sans-serif;}
+  .tab.active{background:var(--white);color:var(--navy);
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+
+  /* Forms */
+  .form-group{margin-bottom:16px;}
+  label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;
+    letter-spacing:0.5px;display:block;margin-bottom:6px;}
+  input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;
+    font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);
+    background:var(--off);outline:none;transition:border-color 0.2s;}
+  input:focus{border-color:var(--blue-lt);background:var(--white);}
+  input::placeholder{color:#B0BEC5;}
+
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+  /* Role picker */
+  .role-row{display:flex;gap:8px;margin-bottom:16px;}
+  .role-btn{flex:1;padding:10px;border:1.5px solid var(--border);border-radius:8px;
+    font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;
+    background:var(--white);color:var(--muted);font-family:'DM Sans',sans-serif;text-align:center;}
+  .role-btn.active{background:#EEF2FF;border-color:#6366F1;color:#3730A3;}
+  .role-icon{font-size:20px;display:block;margin-bottom:4px;}
+
+  /* Submit */
+  .submit-btn{width:100%;padding:13px;background:var(--blue);color:var(--white);
+    border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;
+    font-family:'DM Sans',sans-serif;transition:all 0.2s;margin-top:8px;}
+  .submit-btn:hover:not(:disabled){background:var(--blue-lt);transform:translateY(-1px);
+    box-shadow:0 4px 16px rgba(21,101,192,0.3);}
+  .submit-btn:disabled{opacity:0.6;cursor:not-allowed;}
+
+  /* Divider */
+  .divider{display:flex;align-items:center;gap:12px;margin:20px 0;}
+  .divider-line{flex:1;height:1px;background:var(--border);}
+  .divider span{font-size:12px;color:var(--muted);}
+
+  /* Error / success */
+  .alert{padding:12px 16px;border-radius:8px;font-size:13px;font-weight:500;
+    margin-bottom:16px;display:none;}
+  .alert.error{background:#FFEBEE;color:var(--red);border:1px solid #FFCDD2;}
+  .alert.success{background:#E8F5E9;color:var(--green);border:1px solid #C8E6C9;}
+
+  /* Spinner */
+  .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);
+    border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* Footer */
+  .footer-note{text-align:center;margin-top:20px;font-size:12px;color:var(--muted);}
+  .footer-note a{color:var(--blue);text-decoration:none;font-weight:600;}
+  .footer-note a:hover{text-decoration:underline;}
+
+  /* Panel switching */
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .section-hint{font-size:12px;color:var(--muted);margin-bottom:16px;
+    padding:10px 12px;background:var(--off);border-radius:8px;border-left:3px solid var(--blue-lt);}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Logo -->
+  <div class="logo">
+    <h1>Assign<span>Eval</span></h1>
+    <p>AI-Powered Assignment Evaluator</p>
+  </div>
+
+  <!-- Card -->
+  <div class="card">
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="showPanel('login')">Sign In</button>
+      <button class="tab" onclick="showPanel('register')">Create Account</button>
+    </div>
+
+    <!-- Alert -->
+    <div class="alert" id="alertBox"></div>
+
+    <!-- ── LOGIN PANEL ── -->
+    <div class="panel active" id="panel-login">
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="loginEmail" placeholder="you@institution.edu" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter your password"
+               autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="submit-btn" id="loginBtn" onclick="doLogin()">Sign In</button>
+      <div class="footer-note" style="margin-top:16px;">
+        Don't have an account? <a href="#" onclick="showPanel('register');return false;">Create one</a>
+      </div>
+    </div>
+
+    <!-- ── REGISTER PANEL ── -->
+    <div class="panel" id="panel-register">
+
+      <!-- Role selection -->
+      <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;
+                  letter-spacing:0.5px;margin-bottom:8px;">I am a...</div>
+      <div class="role-row">
+        <button class="role-btn active" id="role-teacher" onclick="selectRole('teacher')">
+          <span class="role-icon">👩‍🏫</span>Teacher
+        </button>
+        <button class="role-btn" id="role-student" onclick="selectRole('student')">
+          <span class="role-icon">🎓</span>Student
+        </button>
+      </div>
+
+      <!-- Teacher fields -->
+      <div id="teacher-fields">
+        <div class="section-hint">📋 Teachers can create assignments, generate AI rubrics, and review student submissions.</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="t-fullname" placeholder="Dr. Senthil Selvi">
+          </div>
+          <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="t-username" placeholder="senthilselvi">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="t-email" placeholder="you@institution.edu">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Institution</label>
+            <input type="text" id="t-institution" placeholder="SRM Institute">
+          </div>
+          <div class="form-group">
+            <label>Department</label>
+            <input type="text" id="t-department" placeholder="CSE / FDA">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="t-password" placeholder="Minimum 6 characters">
+        </div>
+      </div>
+
+      <!-- Student fields -->
+      <div id="student-fields" style="display:none;">
+        <div class="section-hint">🎓 Students can submit assignments and view their AI-evaluated marks and feedback.</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="s-fullname" placeholder="Gowtham R">
+          </div>
+          <div class="form-group">
+            <label>Roll Number</label>
+            <input type="text" id="s-rollno" placeholder="RA2511047020047">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="s-email" placeholder="you@institution.edu">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Institution</label>
+            <input type="text" id="s-institution" placeholder="SRM Institute">
+          </div>
+          <div class="form-group">
+            <label>Department</label>
+            <input type="text" id="s-department" placeholder="B.Tech CSE">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="s-password" placeholder="Minimum 6 characters">
+        </div>
+      </div>
+
+      <button class="submit-btn" id="registerBtn" onclick="doRegister()">Create Account</button>
+      <div class="footer-note" style="margin-top:16px;">
+        Already have an account? <a href="#" onclick="showPanel('login');return false;">Sign in</a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer-note">
+    AssignEval · AI-Powered Assignment Evaluation Platform
+  </div>
+</div>
+
+<script>
+const API = window.location.hostname === 'localhost'
+  ? 'http://localhost:5000/api'
+  : window.location.origin + '/api';
+
+let selectedRole = 'teacher';
+
+// ── Auto-redirect if already logged in ────────────────────────────────────
+window.onload = () => {
+  const token = localStorage.getItem('ae_token');
+  const role  = localStorage.getItem('ae_role');
+  if (token) {
+    if (role === 'student') window.location.href = 'student-dashboard.html';
+    else window.location.href = 'teacher.html';
+  }
+};
+
+function showPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  document.querySelectorAll('.tab')[name === 'login' ? 0 : 1].classList.add('active');
+  hideAlert();
+}
+
+function selectRole(role) {
+  selectedRole = role;
+  document.getElementById('role-teacher').classList.toggle('active', role === 'teacher');
+  document.getElementById('role-student').classList.toggle('active', role === 'student');
+  document.getElementById('teacher-fields').style.display = role === 'teacher' ? 'block' : 'none';
+  document.getElementById('student-fields').style.display = role === 'student' ? 'block' : 'none';
+}
+
+function showAlert(msg, type='error') {
+  const box = document.getElementById('alertBox');
+  box.textContent = msg;
+  box.className = 'alert ' + type;
+  box.style.display = 'block';
+}
+function hideAlert() {
+  document.getElementById('alertBox').style.display = 'none';
+}
+
+// ── LOGIN ──────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const email    = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if (!email || !password) { showAlert('Please enter email and password.'); return; }
+
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Signing in...';
+  hideAlert();
+
+  try {
+    const res  = await fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+
+    if (!res.ok) { showAlert(data.error || 'Login failed'); return; }
+
+    // Save auth data
+    localStorage.setItem('ae_token',     data.token);
+    localStorage.setItem('ae_role',      data.user.role);
+    localStorage.setItem('ae_user',      JSON.stringify(data.user));
+    localStorage.setItem('teacher_name', data.user.full_name || data.user.username);
+
+    showAlert('Welcome back, ' + (data.user.full_name || data.user.username) + '!', 'success');
+
+    setTimeout(() => {
+      if (data.user.role === 'student')      window.location.href = 'student-dashboard.html';
+      else if (data.user.role === 'admin')   window.location.href = 'admin.html';
+      else                                    window.location.href = 'teacher.html';
+    }, 600);
+
+  } catch(e) {
+    showAlert('Connection error. Is the server running?');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Sign In';
+}
+
+// ── REGISTER ───────────────────────────────────────────────────────────────
+async function doRegister() {
+  hideAlert();
+  let body;
+
+  if (selectedRole === 'teacher') {
+    const fullname    = document.getElementById('t-fullname').value.trim();
+    const username    = document.getElementById('t-username').value.trim();
+    const email       = document.getElementById('t-email').value.trim();
+    const institution = document.getElementById('t-institution').value.trim();
+    const department  = document.getElementById('t-department').value.trim();
+    const password    = document.getElementById('t-password').value;
+    if (!fullname || !username || !email || !password) {
+      showAlert('Please fill in all required fields.'); return;
+    }
+    body = { full_name: fullname, username, email, password, institution, department, role: 'teacher' };
+  } else {
+    const fullname    = document.getElementById('s-fullname').value.trim();
+    const rollno      = document.getElementById('s-rollno').value.trim().toUpperCase();
+    const email       = document.getElementById('s-email').value.trim();
+    const institution = document.getElementById('s-institution').value.trim();
+    const department  = document.getElementById('s-department').value.trim();
+    const password    = document.getElementById('s-password').value;
+    if (!fullname || !rollno || !email || !password) {
+      showAlert('Please fill in all required fields.'); return;
+    }
+    body = { full_name: fullname, roll_number: rollno, email, password, institution, department };
+  }
+
+  const btn = document.getElementById('registerBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Creating account...';
+
+  try {
+    const endpoint = selectedRole === 'student' ? 'auth/student-register' : 'auth/register';
+    const res  = await fetch(`${API}/${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+
+    if (!res.ok) { showAlert(data.error || 'Registration failed'); return; }
+
+    localStorage.setItem('ae_token',     data.token);
+    localStorage.setItem('ae_role',      data.user.role);
+    localStorage.setItem('ae_user',      JSON.stringify(data.user));
+    localStorage.setItem('teacher_name', data.user.full_name || data.user.username);
+
+    showAlert('Account created! Redirecting...', 'success');
+    setTimeout(() => {
+      if (data.user.role === 'student') window.location.href = 'student-dashboard.html';
+      else window.location.href = 'teacher.html';
+    }, 800);
+
+  } catch(e) {
+    showAlert('Connection error. Is the server running?');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Create Account';
+}
+</script>
+</body>
+</html>

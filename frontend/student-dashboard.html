@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AssignEval — My Results</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --navy:#0D1B2A;--blue:#1565C0;--blue-lt:#1E88E5;
+    --green:#2E7D32;--amber:#F57F17;--red:#C62828;
+    --white:#FFFFFF;--off:#F5F7FA;--border:#E2E8F0;
+    --text:#1A2332;--muted:#607D8B;
+  }
+  body{font-family:'DM Sans',sans-serif;background:var(--off);min-height:100vh;}
+
+  /* Top bar */
+  .topbar{background:var(--navy);padding:14px 24px;display:flex;align-items:center;
+    justify-content:space-between;}
+  .topbar-brand{font-size:20px;font-weight:700;color:var(--white);}
+  .topbar-brand span{color:#FF6B35;}
+  .topbar-right{display:flex;align-items:center;gap:12px;}
+  .user-chip{background:rgba(255,255,255,0.1);padding:6px 14px;border-radius:20px;
+    font-size:13px;color:var(--white);font-weight:600;}
+  .logout-btn{background:rgba(255,255,255,0.1);border:none;color:var(--white);
+    padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;
+    font-family:'DM Sans',sans-serif;transition:background 0.2s;}
+  .logout-btn:hover{background:rgba(255,255,255,0.2);}
+
+  /* Hero */
+  .hero{background:linear-gradient(135deg,var(--navy) 0%,#1A3A5C 100%);
+    padding:32px 24px;color:var(--white);}
+  .hero h2{font-size:24px;font-weight:700;margin-bottom:4px;}
+  .hero p{font-size:14px;color:#90A4AE;}
+  .stats-row{display:flex;gap:16px;margin-top:20px;flex-wrap:wrap;}
+  .stat{background:rgba(255,255,255,0.08);border-radius:10px;padding:14px 20px;
+    text-align:center;min-width:100px;}
+  .stat-val{font-size:24px;font-weight:700;color:var(--white);}
+  .stat-label{font-size:11px;color:#90A4AE;margin-top:2px;text-transform:uppercase;letter-spacing:0.5px;}
+
+  /* Content */
+  .content{max-width:900px;margin:0 auto;padding:28px 20px;}
+
+  .section-title{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px;
+    display:flex;align-items:center;gap:8px;}
+
+  /* Cards */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+  .card{background:var(--white);border-radius:14px;padding:20px;
+    border:1.5px solid var(--border);transition:box-shadow 0.2s;}
+  .card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08);}
+
+  .card-header{margin-bottom:14px;}
+  .card-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:2px;}
+  .card-sub{font-size:12px;color:var(--muted);}
+
+  .score-row{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+  .score-ring-wrap{position:relative;width:56px;height:56px;flex-shrink:0;}
+  .score-ring-wrap svg{transform:rotate(-90deg);}
+  .ring-inner{position:absolute;inset:0;display:flex;align-items:center;
+    justify-content:center;flex-direction:column;}
+  .ring-marks{font-size:13px;font-weight:700;}
+  .ring-denom{font-size:9px;color:var(--muted);}
+  .score-info{flex:1;}
+  .score-pct{font-size:22px;font-weight:700;}
+  .score-grade{font-size:12px;font-weight:600;margin-top:1px;}
+
+  .badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+  .badge{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;}
+  .badge-hw{background:#FCE4EC;color:#880E4F;}
+  .badge-typed{background:#E3F2FD;color:#0D47A1;}
+  .badge-mixed{background:#FFF8E1;color:#E65100;}
+  .badge-approved{background:#E8F5E9;color:#1B5E20;}
+  .badge-pending{background:#FFF8E1;color:#E65100;}
+  .badge-overridden{background:#EDE7F6;color:#4A148C;}
+
+  .view-btn{width:100%;padding:10px;background:var(--navy);color:var(--white);
+    border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;
+    font-family:'DM Sans',sans-serif;transition:background 0.2s;}
+  .view-btn:hover{background:var(--blue);}
+
+  /* Empty */
+  .empty{text-align:center;padding:60px 20px;color:var(--muted);}
+  .empty div{font-size:48px;margin-bottom:12px;}
+  .empty p{font-size:15px;font-weight:600;margin-bottom:6px;color:var(--navy);}
+  .empty small{font-size:13px;}
+
+  /* Spinner */
+  .spinner-wrap{text-align:center;padding:60px;color:var(--muted);}
+  .spinner{display:inline-block;width:32px;height:32px;border:3px solid #E2E8F0;
+    border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">Assign<span>Eval</span></div>
+  <div class="topbar-right">
+    <div class="user-chip" id="userChip">🎓 Student</div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<div class="hero">
+  <h2 id="heroName">My Results</h2>
+  <p id="heroSub">View your assignment submissions and AI-evaluated marks</p>
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-val" id="statTotal">—</div>
+      <div class="stat-label">Submitted</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="statApproved" style="color:#66BB6A;">—</div>
+      <div class="stat-label">Approved</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="statPending" style="color:#FFB74D;">—</div>
+      <div class="stat-label">Pending Review</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="statAvg" style="color:#64B5F6;">—</div>
+      <div class="stat-label">Avg Score %</div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <div class="section-title">📋 My Submissions</div>
+  <div id="cardsWrap" class="cards">
+    <div class="spinner-wrap"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<script>
+const API = window.location.hostname === 'localhost'
+  ? 'http://localhost:5000/api'
+  : window.location.origin + '/api';
+
+function authHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + (localStorage.getItem('ae_token') || '')
+  };
+}
+
+function logout() {
+  localStorage.removeItem('ae_token');
+  localStorage.removeItem('ae_role');
+  localStorage.removeItem('ae_user');
+  window.location.href = 'login.html';
+}
+
+window.onload = async () => {
+  // Check auth
+  const token = localStorage.getItem('ae_token');
+  const role  = localStorage.getItem('ae_role');
+  if (!token) { window.location.href = 'login.html'; return; }
+  if (role === 'teacher' || role === 'admin') {
+    window.location.href = 'teacher.html'; return;
+  }
+
+  const user = JSON.parse(localStorage.getItem('ae_user') || '{}');
+  document.getElementById('heroName').textContent = 'Welcome, ' + (user.full_name || user.username || 'Student');
+  document.getElementById('heroSub').textContent  = (user.institution || '') + (user.department ? ' · ' + user.department : '');
+  document.getElementById('userChip').textContent = '🎓 ' + (user.full_name || user.username || 'Student');
+
+  loadSubmissions();
+};
+
+function gradeColor(pct) {
+  if (pct >= 80) return '#66BB6A';
+  if (pct >= 70) return '#90CAF9';
+  if (pct >= 60) return '#FFD54F';
+  if (pct >= 50) return '#FFB74D';
+  if (pct >= 40) return '#FF8A65';
+  return '#EF9A9A';
+}
+function gradeLabel(pct) {
+  if (pct >= 90) return 'O — Outstanding';
+  if (pct >= 80) return 'A+ — Excellent';
+  if (pct >= 70) return 'A — Very Good';
+  if (pct >= 60) return 'B+ — Good';
+  if (pct >= 50) return 'B — Average';
+  if (pct >= 40) return 'C — Pass';
+  return 'F — Fail';
+}
+
+async function loadSubmissions() {
+  try {
+    const res  = await fetch(`${API}/student/my-submissions`, { headers: authHeaders() });
+
+    if (res.status === 401) { logout(); return; }
+
+    const data = await res.json();
+
+    if (!Array.isArray(data) || !data.length) {
+      document.getElementById('cardsWrap').innerHTML = `
+        <div class="empty" style="grid-column:1/-1;">
+          <div>📭</div>
+          <p>No submissions yet</p>
+          <small>Submit an assignment using the link your teacher shared</small>
+        </div>`;
+      setStats([], []);
+      return;
+    }
+
+    setStats(data, data.filter(s => s.teacher_approved));
+    renderCards(data);
+
+  } catch(e) {
+    document.getElementById('cardsWrap').innerHTML = `
+      <div class="empty" style="grid-column:1/-1;">
+        <div>⚠️</div><p>Could not load submissions</p>
+        <small>${e.message}</small>
+      </div>`;
+  }
+}
+
+function setStats(all, approved) {
+  const pcts = all.map(s => s.max_marks > 0 ? Math.round((s.final_marks / s.max_marks) * 100) : 0);
+  document.getElementById('statTotal').textContent    = all.length;
+  document.getElementById('statApproved').textContent = approved.length;
+  document.getElementById('statPending').textContent  = all.filter(s => !s.teacher_approved).length;
+  document.getElementById('statAvg').textContent      = pcts.length
+    ? Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length) + '%' : '—';
+}
+
+function renderCards(subs) {
+  const wrap = document.getElementById('cardsWrap');
+  wrap.innerHTML = subs.map(s => {
+    const pct   = s.max_marks > 0 ? Math.round((s.final_marks / s.max_marks) * 100) : 0;
+    const color = gradeColor(pct);
+    const grade = gradeLabel(pct);
+    const circ  = 2 * Math.PI * 24;
+    const dash  = (pct / 100) * circ;
+
+    const typeBadge = s.submission_type === 'handwritten'
+      ? `<span class="badge badge-hw">✍ Handwritten</span>`
+      : s.submission_type === 'mixed'
+      ? `<span class="badge badge-mixed">📄 Mixed</span>`
+      : `<span class="badge badge-typed">⌨ Typed</span>`;
+
+    const statusBadge = s.teacher_approved === 2
+      ? `<span class="badge badge-overridden">✏ Teacher Graded</span>`
+      : s.teacher_approved === 1
+      ? `<span class="badge badge-approved">✅ Approved</span>`
+      : `<span class="badge badge-pending">⏳ Pending Review</span>`;
+
+    const dateStr = new Date(s.submitted_at).toLocaleDateString('en-IN',
+      {day:'2-digit',month:'short',year:'numeric'});
+
+    return `<div class="card">
+      <div class="card-header">
+        <div class="card-title">${s.title || 'Assignment'}</div>
+        <div class="card-sub">${s.subject || ''} · ${dateStr}</div>
+      </div>
+      <div class="score-row">
+        <div class="score-ring-wrap">
+          <svg width="56" height="56" viewBox="0 0 56 56">
+            <circle cx="28" cy="28" r="24" fill="none" stroke="#E2E8F0" stroke-width="5"/>
+            <circle cx="28" cy="28" r="24" fill="none" stroke="${color}" stroke-width="5"
+              stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}"
+              stroke-linecap="round"/>
+          </svg>
+          <div class="ring-inner">
+            <span class="ring-marks" style="color:${color}">${s.final_marks}</span>
+            <span class="ring-denom">/${s.max_marks}</span>
+          </div>
+        </div>
+        <div class="score-info">
+          <div class="score-pct" style="color:${color}">${pct}%</div>
+          <div class="score-grade" style="color:${color}">${grade}</div>
+        </div>
+      </div>
+      <div class="badges">${typeBadge}${statusBadge}</div>
+      <button class="view-btn" onclick="viewResult('${s.assignment_id}')">
+        📊 View Full Result
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function viewResult(assignmentId) {
+  const user = JSON.parse(localStorage.getItem('ae_user') || '{}');
+  const roll = user.username || '';
+  window.location.href = `result.html?assignment_id=${assignmentId}&roll_number=${roll}`;
+}
+</script>
+</body>
+</html>

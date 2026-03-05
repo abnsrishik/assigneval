@@ -1,0 +1,8 @@
+flask
+flask-cors
+groq
+PyMuPDF
+openpyxl
+bcrypt
+PyJWT
+gunicorn

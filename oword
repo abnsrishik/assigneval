@@ -1,0 +1,38 @@
+[35mREADME.md[m[36m:[m[32m14[m[36m:[m### Step 2 — Paste your Groq API [1;31mkey[m
+[35mREADME.md[m[36m:[m[32m16[m[36m:[mFind line 14 and paste your [1;31mkey[m:
+[35mREADME.md[m[36m:[m[32m18[m[36m:[mGROQ_API_KEY = "gsk_your_[1;31mkey[m_here"
+[35mREADME.md[m[36m:[m[32m20[m[36m:[mGet free [1;31mkey[m from: https://console.groq.com (just Google login, no card)
+[35mbackend/START_SERVER.bat[m[36m:[m[32m13[m[36m:[mecho  Server stopped. Press any [1;31mkey[m to exit.
+[35mbackend/auth.py[m[36m:[m[32m10[m[36m:[m# ── Secret [1;31mkey[m — change this in production! ──────────────────────────────────
+[35mbackend/check_models.py[m[36m:[m[32m9[m[36m:[mclient = Groq(api_[1;31mkey[m=GROQ_API_KEY)
+[35mbackend/check_models.py[m[36m:[m[32m16[m[36m:[mfor m in sorted(models.data, [1;31mkey[m=lambda x: x.id):
+[35mbackend/database.py[m[36m:[m[32m11[m[36m:[m    conn.execute("PRAGMA foreign_[1;31mkey[ms = ON")
+[35mbackend/evaluator.py[m[36m:[m[32m136[m[36m:[m  "feedback": "<5-7 sentence detailed student feedback: overall summary, what was done well with specific references, what [1;31mkey[m concepts were missing or incorrect, how to improve>",
+[35mbackend/evaluator.py[m[36m:[m[32m315[m[36m:[m    [1;31mkey[m = os.environ.get("GROQ_API_KEY") or GROQ_API_KEY
+[35mbackend/evaluator.py[m[36m:[m[32m316[m[36m:[m    if not [1;31mkey[m or [1;31mkey[m == "PASTE_YOUR_KEY_HERE":
+[35mbackend/evaluator.py[m[36m:[m[32m317[m[36m:[m        raise ValueError("Groq API [1;31mkey[m not set in evaluator.py")
+[35mbackend/evaluator.py[m[36m:[m[32m318[m[36m:[m    return Groq(api_[1;31mkey[m=[1;31mkey[m)
+[35mbackend/test_api.py[m[36m:[m[32m1[m[36m:[m"""Test your Groq [1;31mkey[m. Run: python test_api.py"""
+[35mbackend/test_api.py[m[36m:[m[32m6[m[36m:[mprint("Testing Groq API [1;31mkey[m...")
+[35mbackend/test_api.py[m[36m:[m[32m8[m[36m:[m    client = Groq(api_[1;31mkey[m=GROQ_API_KEY)
+[35mbackend/test_api.py[m[36m:[m[32m17[m[36m:[m    print("\nNow paste this same [1;31mkey[m into evaluator.py and run python app.py")
+[35mfrontend/index.html[m[36m:[m[32m134[m[36m:[m  @[1;31mkey[mframes pulse {
+[35mfrontend/index.html[m[36m:[m[32m223[m[36m:[m  @[1;31mkey[mframes float {
+[35mfrontend/index.html[m[36m:[m[32m647[m[36m:[m// Allow Enter [1;31mkey[m
+[35mfrontend/index.html[m[36m:[m[32m648[m[36m:[mdocument.addEventListener("[1;31mkey[mdown", (e) => {
+[35mfrontend/index.html[m[36m:[m[32m649[m[36m:[m  if (e.[1;31mkey[m === "Enter") lookupResult();
+[35mfrontend/login.html[m[36m:[m[32m81[m[36m:[m  @[1;31mkey[mframes spin{to{transform:rotate(360deg);}}
+[35mfrontend/login.html[m[36m:[m[32m125[m[36m:[m               autocomplete="current-password" on[1;31mkey[mdown="if(event.[1;31mkey[m==='Enter')doLogin()">
+[35mfrontend/pages/result.html[m[36m:[m[32m114[m[36m:[m@[1;31mkey[mframes spin{to{transform:rotate(360deg);}}
+[35mfrontend/pages/results.html[m[36m:[m[32m213[m[36m:[m@[1;31mkey[mframes spin{to{transform:rotate(360deg);}}
+[35mfrontend/pages/submit.html[m[36m:[m[32m127[m[36m:[m  @[1;31mkey[mframes spin { to { transform: rotate(360deg); } }
+[35mfrontend/pages/teacher.html[m[36m:[m[32m196[m[36m:[m  @[1;31mkey[mframes spin{to{transform:rotate(360deg);}}
+[35mfrontend/pages/teacher.html[m[36m:[m[32m220[m[36m:[m          on[1;31mkey[mdown="if(event.[1;31mkey[m==='Enter') doLogin()">
+[35mfrontend/student-dashboard.html[m[36m:[m[32m93[m[36m:[m  @[1;31mkey[mframes spin{to{transform:rotate(360deg);}}
+[35mfrontend/teacher.html[m[36m:[m[32m196[m[36m:[m  @[1;31mkey[mframes spin{to{transform:rotate(360deg);}}
+[35mfrontend/teacher.html[m[36m:[m[32m220[m[36m:[m          on[1;31mkey[mdown="if(event.[1;31mkey[m==='Enter') doLogin()">
+[35mrender.yaml[m[36m:[m[32m8[m[36m:[m      - [1;31mkey[m: GROQ_API_KEY
+[35mrender.yaml[m[36m:[m[32m10[m[36m:[m      - [1;31mkey[m: JWT_SECRET
+[35msetup.sh[m[36m:[m[32m30[m[36m:[m# ── Step 3: Check API [1;31mkey[m ─────────────────────────────────────
+[35msetup.sh[m[36m:[m[32m35[m[36m:[m    echo "   To enable AI: export ANTHROPIC_API_KEY='your-[1;31mkey[m-here'"
+[35msetup.sh[m[36m:[m[32m36[m[36m:[m    echo "   Get your [1;31mkey[m from: https://console.anthropic.com"

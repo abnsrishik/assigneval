@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Submit Assignment — Assignment Evaluator</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --navy: #0d1b2a;
+        --blue: #1565c0;
+        --blue-lt: #1e88e5;
+        --orange: #ff6b35;
+        --white: #ffffff;
+        --off: #f0f4f8;
+        --muted: #607d8b;
+        --text: #1a2332;
+        --green: #2e7d32;
+        --red: #c62828;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--off);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      .page-wrap {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 32px 16px;
+      }
+
+      .top-logo {
+        font-family: "Syne", sans-serif;
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--navy);
+        margin-bottom: 24px;
+      }
+      .top-logo span {
+        color: var(--orange);
+      }
+
+      .card {
+        background: var(--white);
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+        width: 100%;
+        max-width: 520px;
+        overflow: hidden;
+      }
+
+      .card-header {
+        background: var(--navy);
+        padding: 28px 32px;
+        border-bottom: 3px solid var(--orange);
+      }
+      .assignment-id-badge {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        color: #90a4ae;
+        letter-spacing: 2px;
+        margin-bottom: 8px;
+      }
+      .card-header h1 {
+        font-family: "Syne", sans-serif;
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--white);
+        margin-bottom: 4px;
+      }
+      .card-header .meta {
+        font-size: 13px;
+        color: #90a4ae;
+      }
+
+      /* Deadline timer */
+      .deadline-box {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-top: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .deadline-label {
+        font-size: 11px;
+        color: #90a4ae;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+      .deadline-time {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 14px;
+        color: var(--white);
+      }
+      .countdown {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 13px;
+        color: #ffb74d;
+      }
+
+      .card-body {
+        padding: 28px 32px;
+      }
+
+      /* Form */
+      .form-group {
+        margin-bottom: 18px;
+      }
+      label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+      }
+      input[type="text"],
+      input[type="email"] {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 8px;
+        font-family: "DM Sans", sans-serif;
+        font-size: 14px;
+        color: var(--text);
+        background: var(--off);
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      input:focus {
+        border-color: var(--blue-lt);
+        background: var(--white);
+      }
+
+      /* File drop zone */
+      .drop-zone {
+        border: 2px dashed #cbd5e0;
+        border-radius: 12px;
+        padding: 32px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: var(--off);
+        position: relative;
+      }
+      .drop-zone:hover,
+      .drop-zone.dragover {
+        border-color: var(--blue);
+        background: rgba(21, 101, 192, 0.04);
+      }
+      .drop-zone input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+      }
+      .drop-icon {
+        font-size: 36px;
+        margin-bottom: 10px;
+      }
+      .drop-text {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text);
+        margin-bottom: 4px;
+      }
+      .drop-hint {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .file-selected {
+        background: rgba(21, 101, 192, 0.06);
+        border-color: var(--blue);
+      }
+      .file-name {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        color: var(--blue);
+        margin-top: 8px;
+      }
+
+      /* Submit button */
+      .submit-btn {
+        width: 100%;
+        padding: 14px;
+        background: var(--blue);
+        color: var(--white);
+        border: none;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: "DM Sans", sans-serif;
+        transition: all 0.2s;
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .submit-btn:hover:not(:disabled) {
+        background: var(--blue-lt);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px rgba(21, 101, 192, 0.3);
+      }
+      .submit-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      /* Progress */
+      .progress-bar {
+        height: 4px;
+        background: #e2e8f0;
+        border-radius: 2px;
+        margin-top: 12px;
+        display: none;
+      }
+      .progress-fill {
+        height: 100%;
+        background: var(--blue);
+        border-radius: 2px;
+        width: 0%;
+        transition: width 0.3s;
+      }
+
+      /* Success state */
+      .success-state {
+        text-align: center;
+        padding: 16px 0;
+        display: none;
+      }
+      .success-icon {
+        font-size: 56px;
+        margin-bottom: 16px;
+      }
+      .success-state h2 {
+        font-family: "Syne", sans-serif;
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--green);
+        margin-bottom: 8px;
+      }
+      .success-state p {
+        font-size: 14px;
+        color: var(--muted);
+        margin-bottom: 20px;
+        line-height: 1.6;
+      }
+      .result-box {
+        background: #e8f5e9;
+        border: 1px solid #a5d6a7;
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 16px;
+      }
+      .result-box .marks {
+        font-family: "Syne", sans-serif;
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--green);
+      }
+      .result-box .out-of {
+        font-size: 14px;
+        color: #555;
+      }
+      .review-box {
+        background: #fff8e1;
+        border: 1px solid #ffe082;
+        border-radius: 12px;
+        padding: 14px 18px;
+        font-size: 13px;
+        color: #795548;
+        text-align: left;
+      }
+
+      /* Expired state */
+      .expired-state {
+        text-align: center;
+        padding: 40px 20px;
+      }
+      .expired-state .icon {
+        font-size: 52px;
+        margin-bottom: 16px;
+      }
+      .expired-state h2 {
+        font-family: "Syne", sans-serif;
+        font-size: 22px;
+        color: var(--red);
+        margin-bottom: 8px;
+      }
+      .expired-state p {
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      /* Loading state */
+      .loading-state {
+        text-align: center;
+        padding: 40px 20px;
+      }
+      .spinner {
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border: 3px solid #e2e8f0;
+        border-top-color: var(--blue);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-bottom: 16px;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .error-msg {
+        color: var(--red);
+        font-size: 13px;
+        margin-top: 8px;
+        display: none;
+      }
+      .info-note {
+        background: rgba(21, 101, 192, 0.06);
+        border-left: 3px solid var(--blue);
+        padding: 10px 14px;
+        border-radius: 0 8px 8px 0;
+        font-size: 12px;
+        color: var(--blue);
+        margin-bottom: 18px;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-wrap">
+      <div class="top-logo">Assign<span>Eval</span></div>
+
+      <div class="card" id="mainCard">
+        <!-- Loading state while fetching assignment details -->
+        <div class="card-body loading-state" id="loadingState">
+          <div class="spinner"></div>
+          <p style="color: var(--muted); font-size: 14px">
+            Loading assignment details...
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API =
+        window.location.hostname === "localhost"
+          ? "http://localhost:5000/api"
+          : window.location.origin + "/api";
+      let assignment = null;
+      let selectedFile = null;
+      let countdownInterval = null;
+
+      // Get assignment ID from URL
+      const params = new URLSearchParams(window.location.search);
+      const assignmentId = params.get("assignment_id");
+
+      window.onload = async () => {
+        if (!assignmentId) {
+          showError("No assignment ID in URL.");
+          return;
+        }
+        await loadAssignment();
+      };
+
+      async function loadAssignment() {
+        try {
+          const res = await fetch(`${API}/assignment/${assignmentId}`);
+          const data = await res.json();
+
+          if (!res.ok) {
+            showError(data.error || "Assignment not found.");
+            return;
+          }
+
+          assignment = data;
+
+          if (data.is_expired) {
+            showExpiredState();
+          } else {
+            showSubmitForm();
+          }
+        } catch (err) {
+          showError(
+            "Could not connect to server. Make sure the backend is running on port 5000.",
+          );
+        }
+      }
+
+      function showSubmitForm() {
+        const card = document.getElementById("mainCard");
+        card.innerHTML = `
+    <div class="card-header">
+      <div class="assignment-id-badge">ASSIGNMENT · ${assignment.assignment_id}</div>
+      <h1>${assignment.title}</h1>
+      <div class="meta">${assignment.subject} · Max Marks: ${assignment.max_marks} · By ${assignment.teacher_name}</div>
+      <div class="deadline-box">
+        <div>
+          <div class="deadline-label">Deadline</div>
+          <div class="deadline-time">${assignment.deadline_formatted}</div>
+        </div>
+        <div style="margin-left:auto;">
+          <div class="deadline-label">Time Left</div>
+          <div class="countdown" id="countdown">Calculating...</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="info-note">
+        📌 Submit your assignment as a <strong>PDF file</strong> before the deadline.
+        Typed PDFs are evaluated automatically. Handwritten PDFs are evaluated via AI Vision.
+      </div>
+
+      <div id="submitForm">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="studentName" placeholder="e.g. Rishik Kumar">
+        </div>
+        <div class="form-group">
+          <label>Roll Number</label>
+          <input type="text" id="rollNumber" placeholder="e.g. RA2211003010123">
+        </div>
+        <div class="form-group">
+          <label>Email (Optional)</label>
+          <input type="email" id="studentEmail" placeholder="e.g. rishik@srmist.edu.in">
+        </div>
+        <div class="form-group">
+          <label>Assignment PDF</label>
+          <div class="drop-zone" id="dropZone">
+            <input type="file" accept=".pdf" id="fileInput" onchange="fileSelected(this)">
+            <div class="drop-icon">📄</div>
+            <div class="drop-text">Click to select or drag & drop</div>
+            <div class="drop-hint">Only PDF files accepted · Max 20MB</div>
+            <div class="file-name" id="fileName"></div>
+          </div>
+        </div>
+        <div class="error-msg" id="errorMsg"></div>
+        <button class="submit-btn" id="submitBtn" onclick="submitAssignment()">
+          Submit Assignment
+        </button>
+        <div class="progress-bar" id="progressBar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+    </div>
+  `;
+
+        startCountdown();
+        setupDragDrop();
+      }
+
+      function showExpiredState() {
+        const card = document.getElementById("mainCard");
+        card.innerHTML = `
+    <div class="card-header">
+      <div class="assignment-id-badge">ASSIGNMENT · ${assignment.assignment_id}</div>
+      <h1>${assignment.title}</h1>
+    </div>
+    <div class="card-body">
+      <div class="expired-state">
+        <div class="icon">⏰</div>
+        <h2>Submission Closed</h2>
+        <p>The deadline for this assignment was <strong>${assignment.deadline_formatted}</strong>.<br>Submissions are no longer accepted.</p>
+        <p style="margin-top:16px;font-size:12px;color:#aaa;">Contact your teacher if you think this is an error.</p>
+      </div>
+    </div>
+  `;
+      }
+
+      function showError(msg) {
+        const card = document.getElementById("mainCard");
+        card.innerHTML = `
+    <div class="card-body" style="text-align:center;padding:40px 20px;">
+      <div style="font-size:48px;margin-bottom:16px;">❌</div>
+      <h3 style="font-family:'Syne',sans-serif;color:var(--red);margin-bottom:8px;">Error</h3>
+      <p style="font-size:14px;color:var(--muted);">${msg}</p>
+    </div>
+  `;
+      }
+
+      function startCountdown() {
+        const deadline = new Date(assignment.deadline);
+        function update() {
+          const now = new Date();
+          const diff = deadline - now;
+          if (diff <= 0) {
+            document.getElementById("countdown").textContent = "EXPIRED";
+            showExpiredState();
+            clearInterval(countdownInterval);
+            return;
+          }
+          const days = Math.floor(diff / 86400000);
+          const hrs = Math.floor((diff % 86400000) / 3600000);
+          const mins = Math.floor((diff % 3600000) / 60000);
+          const secs = Math.floor((diff % 60000) / 1000);
+          const el = document.getElementById("countdown");
+          if (el)
+            el.textContent =
+              days > 0
+                ? `${days}d ${hrs}h ${mins}m`
+                : `${hrs}h ${mins}m ${secs}s`;
+        }
+        update();
+        countdownInterval = setInterval(update, 1000);
+      }
+
+      function fileSelected(input) {
+        if (input.files[0]) {
+          selectedFile = input.files[0];
+          const dz = document.getElementById("dropZone");
+          dz.classList.add("file-selected");
+          document.getElementById("fileName").textContent =
+            `✓ ${selectedFile.name} (${(selectedFile.size / 1024 / 1024).toFixed(2)} MB)`;
+        }
+      }
+
+      function setupDragDrop() {
+        const dz = document.getElementById("dropZone");
+        if (!dz) return;
+        dz.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          dz.classList.add("dragover");
+        });
+        dz.addEventListener("dragleave", () => dz.classList.remove("dragover"));
+        dz.addEventListener("drop", (e) => {
+          e.preventDefault();
+          dz.classList.remove("dragover");
+          const files = e.dataTransfer.files;
+          if (files[0] && files[0].type === "application/pdf") {
+            selectedFile = files[0];
+            dz.classList.add("file-selected");
+            document.getElementById("fileName").textContent =
+              `✓ ${selectedFile.name}`;
+          } else {
+            showFormError("Only PDF files are accepted.");
+          }
+        });
+      }
+
+      async function submitAssignment() {
+        const name = document.getElementById("studentName").value.trim();
+        const roll = document.getElementById("rollNumber").value.trim();
+        const email = document.getElementById("studentEmail").value.trim();
+        const errorEl = document.getElementById("errorMsg");
+
+        if (!name || !roll) {
+          showFormError("Please fill in your name and roll number.");
+          return;
+        }
+        if (!selectedFile) {
+          showFormError("Please select your PDF file.");
+          return;
+        }
+
+        errorEl.style.display = "none";
+
+        const btn = document.getElementById("submitBtn");
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner" style="width:18px;height:18px;border-width:2px;"></span> Submitting & Evaluating...`;
+
+        // Show progress bar
+        const pb = document.getElementById("progressBar");
+        const pf = document.getElementById("progressFill");
+        pb.style.display = "block";
+
+        // Simulate progress
+        let prog = 0;
+        const progInterval = setInterval(() => {
+          prog = Math.min(prog + Math.random() * 15, 85);
+          pf.style.width = prog + "%";
+        }, 500);
+
+        try {
+          const formData = new FormData();
+          formData.append("file", selectedFile);
+          formData.append("student_name", name);
+          formData.append("roll_number", roll);
+          formData.append("email", email);
+
+          const res = await fetch(`${API}/submit/${assignmentId}`, {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await res.json();
+          clearInterval(progInterval);
+          pf.style.width = "100%";
+
+          if (!res.ok) {
+            showFormError(data.message || data.error || "Submission failed.");
+            btn.disabled = false;
+            btn.textContent = "Submit Assignment";
+            pb.style.display = "none";
+            return;
+          }
+
+          // Success!
+          setTimeout(() => showSuccessState(data, name, roll), 400);
+        } catch (err) {
+          clearInterval(progInterval);
+          showFormError("Connection error. Make sure the server is running.");
+          btn.disabled = false;
+          btn.textContent = "Submit Assignment";
+          pb.style.display = "none";
+        }
+      }
+
+      function showSuccessState(data, name, roll) {
+        const card = document.getElementById("mainCard");
+        const preview = data.result_preview || {};
+        const marks = preview.marks ?? "—";
+        const maxM = preview.max_marks ?? assignment.max_marks;
+        const needsReview = preview.needs_review;
+
+        card.innerHTML = `
+    <div class="card-header" style="background:var(--green);">
+      <div class="assignment-id-badge" style="color:rgba(255,255,255,0.7);">SUBMISSION RECEIVED</div>
+      <h1 style="color:var(--white);">${assignment.title}</h1>
+    </div>
+    <div class="card-body">
+      <div style="text-align:center;padding:8px 0 20px;">
+        <div style="font-size:52px;margin-bottom:12px;">✅</div>
+        <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--green);margin-bottom:6px;">Submitted Successfully!</h2>
+        <p style="font-size:14px;color:var(--muted);">Hello <strong>${name}</strong>, your assignment has been received and evaluated.</p>
+      </div>
+
+      ${
+        !needsReview
+          ? `
+      <div class="result-box" style="text-align:center;margin-bottom:16px;">
+        <div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;">Your Score</div>
+        <div class="marks">${marks}<span style="font-size:18px;color:var(--muted);font-weight:400"> / ${maxM}</span></div>
+        <div class="out-of">Evaluated by AI</div>
+      </div>`
+          : ""
+      }
+
+      ${
+        needsReview
+          ? `
+      <div class="review-box">
+        ⚠️ Your submission has been received. It contains handwritten or image content and has been flagged for your teacher's review. Your marks will be confirmed by the teacher.
+      </div>`
+          : ""
+      }
+
+      <div style="background:var(--off);border-radius:10px;padding:14px 16px;margin-top:16px;font-size:13px;color:var(--muted);">
+        <div>🎓 Assignment: <strong style="color:var(--text);">${assignment.title}</strong></div>
+        <div>📋 Submission ID: <code style="font-family:'JetBrains Mono',monospace;color:var(--blue);">${data.submission_id}</code></div>
+        <div>🆔 Your Roll Number: <strong style="color:var(--text);">${roll}</strong></div>
+      </div>
+
+      <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:16px;">
+        Use your roll number to check results later: 
+        <a href="result.html?assignment_id=${assignmentId}&roll=${encodeURIComponent(roll)}" style="color:var(--blue);">View Result →</a>
+      </p>
+    </div>
+  `;
+      }
+
+      function showFormError(msg) {
+        const el = document.getElementById("errorMsg");
+        if (el) {
+          el.textContent = msg;
+          el.style.display = "block";
+        }
+      }
+    </script>
+  </body>
+</html>
