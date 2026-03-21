@@ -452,42 +452,81 @@ Q31. Analyse the given dataset and demonstrate how data transformation improves 
 </div><!-- /dashboard -->
 
 <script>
-const API = "http://localhost:5000/api";
+// Auto-detect API base — works locally and on any hosted domain
+const API = window.location.hostname === "localhost"
+  ? "http://localhost:5000/api"
+  : window.location.origin + "/api";
+
 let teacherName = "";
 let allAssignments = [];
 let generatedRubric = "";
 let selectedSubTypes = ["theory","code","mixed"];
 let currentStep = 1;
 
-// ── On load ───────────────────────────────────────────────────────────────────
+// ── Auth helpers ──────────────────────────────────────────────────────────────
+function authHeaders() {
+  return {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer " + (localStorage.getItem("ae_token") || "")
+  };
+}
+function getUser() {
+  try { return JSON.parse(localStorage.getItem("ae_user") || "{}"); }
+  catch { return {}; }
+}
+
+// ── On load — check auth ──────────────────────────────────────────────────────
 window.onload = () => {
+  const token = localStorage.getItem("ae_token");
+  const role  = localStorage.getItem("ae_role");
+
+  // If logged in via new auth, use that
+  if (token && (role === "teacher" || role === "admin")) {
+    const user = getUser();
+    enterDashboard(user.full_name || user.username || localStorage.getItem("teacher_name") || "Teacher");
+    return;
+  }
+
+  // Legacy: if old teacher_name saved, still works
   const saved = localStorage.getItem("teacher_name");
-  if (saved && saved.length > 1) enterDashboard(saved);
+  if (saved && saved.length > 1) {
+    enterDashboard(saved);
+    return;
+  }
+
+  // Show login screen (legacy name login still works)
   const d = new Date(); d.setDate(d.getDate() + 7);
   document.getElementById("aDeadline").value = d.toISOString().slice(0,16);
 };
 
-// ── Login ─────────────────────────────────────────────────────────────────────
+// ── Login (legacy name-based — still supported) ───────────────────────────────
 function doLogin() {
   const name = document.getElementById("loginName").value.trim();
   if (!name || name.length < 2) { alert("Enter your name (at least 2 chars)."); return; }
   localStorage.setItem("teacher_name", name);
   enterDashboard(name);
 }
+
 function enterDashboard(name) {
   teacherName = name;
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("dashboard").style.display = "block";
   document.getElementById("sidebarName").textContent = name;
   document.getElementById("topbarName").textContent = name;
+  const d = new Date(); d.setDate(d.getDate() + 7);
+  const dl = document.getElementById("aDeadline");
+  if (dl && !dl.value) dl.value = d.toISOString().slice(0,16);
   loadAssignments();
 }
+
 function logout() {
   localStorage.removeItem("teacher_name");
+  localStorage.removeItem("ae_token");
+  localStorage.removeItem("ae_role");
+  localStorage.removeItem("ae_user");
   teacherName = "";
-  document.getElementById("loginScreen").style.display = "block";
-  document.getElementById("dashboard").style.display = "none";
-  document.getElementById("loginName").value = "";
+  // Redirect to proper login page if it exists, else show legacy screen
+  window.location.href = "login.html";
 }
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
@@ -560,7 +599,7 @@ async function generateRubric() {
   try {
     const res = await fetch(`${API}/teacher/generate-rubric`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify({
         questions,
         subject,
@@ -578,7 +617,11 @@ async function generateRubric() {
     document.getElementById("rubricPreview").scrollIntoView({ behavior: "smooth" });
 
   } catch(e) {
-    alert("Error generating rubric: " + e.message);
+    let msg = e.message;
+    if (msg === "Failed to fetch") {
+      msg = "Cannot reach the server. The server may be waking up (takes 30-60s on free tier). Please wait and try again.";
+    }
+    alert("Error generating rubric: " + msg);
   }
   btn.disabled = false;
   btn.innerHTML = "✨ Generate Rubric with AI";
@@ -693,7 +736,7 @@ async function createAssignment() {
   try {
     const res = await fetch(`${API}/teacher/create-assignment`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify({
         title, subject,
         max_marks: maxMarks,
@@ -705,7 +748,9 @@ async function createAssignment() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Failed");
 
-    const base = "http://localhost:5000";
+    const base = window.location.hostname === "localhost"
+      ? "http://localhost:5000"
+      : window.location.origin;
     document.getElementById("submissionLinkText").textContent = `${base}/pages/submit.html?assignment_id=${data.assignment_id}`;
     document.getElementById("resultsLinkText").textContent    = `${base}/pages/results.html?assignment_id=${data.assignment_id}`;
     document.getElementById("assignmentIdText").textContent   = data.assignment_id;

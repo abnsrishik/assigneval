@@ -1,697 +1,854 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Submit Assignment — Assignment Evaluator</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      :root {
-        --navy: #0d1b2a;
-        --blue: #1565c0;
-        --blue-lt: #1e88e5;
-        --orange: #ff6b35;
-        --white: #ffffff;
-        --off: #f0f4f8;
-        --muted: #607d8b;
-        --text: #1a2332;
-        --green: #2e7d32;
-        --red: #c62828;
-      }
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-      body {
-        font-family: "DM Sans", sans-serif;
-        background: var(--off);
-        color: var(--text);
-        min-height: 100vh;
-      }
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0D1B2A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Submit Assignment — AssignEval</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Variables ─────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-      .page-wrap {
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        padding: 32px 16px;
-      }
+:root {
+  --navy:    #0D1B2A;
+  --navy2:   #1A2F45;
+  --blue:    #1565C0;
+  --blue-lt: #1E88E5;
+  --orange:  #FF6B35;
+  --green:   #00C896;
+  --red:     #FF4757;
+  --white:   #FFFFFF;
+  --off:     #F5F7FA;
+  --border:  #E2E8F0;
+  --text:    #1A2332;
+  --muted:   #64748B;
+  --card-shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
 
-      .top-logo {
-        font-family: "Syne", sans-serif;
-        font-size: 16px;
-        font-weight: 800;
-        color: var(--navy);
-        margin-bottom: 24px;
-      }
-      .top-logo span {
-        color: var(--orange);
-      }
+html { scroll-behavior: smooth; }
 
-      .card {
-        background: var(--white);
-        border-radius: 20px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
-        width: 100%;
-        max-width: 520px;
-        overflow: hidden;
-      }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--off);
+  color: var(--text);
+  min-height: 100vh;
+  min-height: 100dvh; /* dynamic viewport for mobile */
+  -webkit-font-smoothing: antialiased;
+}
 
-      .card-header {
-        background: var(--navy);
-        padding: 28px 32px;
-        border-bottom: 3px solid var(--orange);
-      }
-      .assignment-id-badge {
-        font-family: "JetBrains Mono", monospace;
-        font-size: 11px;
-        color: #90a4ae;
-        letter-spacing: 2px;
-        margin-bottom: 8px;
-      }
-      .card-header h1 {
-        font-family: "Syne", sans-serif;
-        font-size: 22px;
-        font-weight: 700;
-        color: var(--white);
-        margin-bottom: 4px;
-      }
-      .card-header .meta {
-        font-size: 13px;
-        color: #90a4ae;
-      }
+/* ── Top Bar ───────────────────────────────────────────────────────────────── */
+.topbar {
+  background: var(--navy);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.brand { font-size: 18px; font-weight: 700; color: var(--white); letter-spacing: -0.3px; }
+.brand span { color: var(--orange); }
+.secure-badge {
+  font-size: 11px; color: rgba(255,255,255,0.6);
+  display: flex; align-items: center; gap: 4px;
+  background: rgba(255,255,255,0.08);
+  padding: 4px 10px; border-radius: 20px;
+}
 
-      /* Deadline timer */
-      .deadline-box {
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        padding: 12px 16px;
-        margin-top: 16px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .deadline-label {
-        font-size: 11px;
-        color: #90a4ae;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-      }
-      .deadline-time {
-        font-family: "JetBrains Mono", monospace;
-        font-size: 14px;
-        color: var(--white);
-      }
-      .countdown {
-        font-family: "JetBrains Mono", monospace;
-        font-size: 13px;
-        color: #ffb74d;
-      }
+/* ── Page wrap ─────────────────────────────────────────────────────────────── */
+.page {
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 16px 16px 40px;
+}
 
-      .card-body {
-        padding: 28px 32px;
-      }
+/* ── Assignment header card ────────────────────────────────────────────────── */
+.assignment-card {
+  background: var(--navy);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.assignment-card::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 120px; height: 120px;
+  background: rgba(255,107,53,0.15);
+  border-radius: 50%;
+}
+.asgn-id {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--orange);
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+.asgn-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 4px;
+  line-height: 1.25;
+}
+.asgn-meta {
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+  margin-bottom: 14px;
+}
+.asgn-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill {
+  background: rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.8);
+  display: flex; align-items: center; gap: 5px;
+}
+.pill.deadline { background: rgba(255,107,53,0.2); color: #FFB09E; }
+.pill.marks    { background: rgba(0,200,150,0.2);  color: #00C896; }
+.pill.countdown { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); font-family:'Space Mono',monospace; font-size:10px; }
 
-      /* Form */
-      .form-group {
-        margin-bottom: 18px;
-      }
-      label {
-        display: block;
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 6px;
-      }
-      input[type="text"],
-      input[type="email"] {
-        width: 100%;
-        padding: 11px 14px;
-        border: 1.5px solid #e2e8f0;
-        border-radius: 8px;
-        font-family: "DM Sans", sans-serif;
-        font-size: 14px;
-        color: var(--text);
-        background: var(--off);
-        outline: none;
-        transition: border-color 0.2s;
-      }
-      input:focus {
-        border-color: var(--blue-lt);
-        background: var(--white);
-      }
+/* ── Form card ─────────────────────────────────────────────────────────────── */
+.form-card {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 24px 20px;
+  box-shadow: var(--card-shadow);
+  margin-bottom: 16px;
+}
+.form-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.form-card-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
 
-      /* File drop zone */
-      .drop-zone {
-        border: 2px dashed #cbd5e0;
-        border-radius: 12px;
-        padding: 32px 20px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.2s;
-        background: var(--off);
-        position: relative;
-      }
-      .drop-zone:hover,
-      .drop-zone.dragover {
-        border-color: var(--blue);
-        background: rgba(21, 101, 192, 0.04);
-      }
-      .drop-zone input {
-        position: absolute;
-        inset: 0;
-        opacity: 0;
-        cursor: pointer;
-        width: 100%;
-        height: 100%;
-      }
-      .drop-icon {
-        font-size: 36px;
-        margin-bottom: 10px;
-      }
-      .drop-text {
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--text);
-        margin-bottom: 4px;
-      }
-      .drop-hint {
-        font-size: 12px;
-        color: var(--muted);
-      }
-      .file-selected {
-        background: rgba(21, 101, 192, 0.06);
-        border-color: var(--blue);
-      }
-      .file-name {
-        font-family: "JetBrains Mono", monospace;
-        font-size: 12px;
-        color: var(--blue);
-        margin-top: 8px;
-      }
+.field { margin-bottom: 14px; }
+label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+}
+.required-star { color: var(--red); margin-left: 2px; }
 
-      /* Submit button */
-      .submit-btn {
-        width: 100%;
-        padding: 14px;
-        background: var(--blue);
-        color: var(--white);
-        border: none;
-        border-radius: 10px;
-        font-size: 15px;
-        font-weight: 600;
-        cursor: pointer;
-        font-family: "DM Sans", sans-serif;
-        transition: all 0.2s;
-        margin-top: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-      }
-      .submit-btn:hover:not(:disabled) {
-        background: var(--blue-lt);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 16px rgba(21, 101, 192, 0.3);
-      }
-      .submit-btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
-      }
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+select {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: var(--text);
+  background: var(--off);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+  /* Bigger touch target on mobile */
+  min-height: 48px;
+}
+input:focus, select:focus {
+  border-color: var(--blue-lt);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(30,136,229,0.12);
+}
+input::placeholder { color: #B0BEC5; }
+select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2364748B' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
 
-      /* Progress */
-      .progress-bar {
-        height: 4px;
-        background: #e2e8f0;
-        border-radius: 2px;
-        margin-top: 12px;
-        display: none;
-      }
-      .progress-fill {
-        height: 100%;
-        background: var(--blue);
-        border-radius: 2px;
-        width: 0%;
-        transition: width 0.3s;
-      }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-      /* Success state */
-      .success-state {
-        text-align: center;
-        padding: 16px 0;
-        display: none;
-      }
-      .success-icon {
-        font-size: 56px;
-        margin-bottom: 16px;
-      }
-      .success-state h2 {
-        font-family: "Syne", sans-serif;
-        font-size: 22px;
-        font-weight: 800;
-        color: var(--green);
-        margin-bottom: 8px;
-      }
-      .success-state p {
-        font-size: 14px;
-        color: var(--muted);
-        margin-bottom: 20px;
-        line-height: 1.6;
-      }
-      .result-box {
-        background: #e8f5e9;
-        border: 1px solid #a5d6a7;
-        border-radius: 12px;
-        padding: 16px 20px;
-        margin-bottom: 16px;
-      }
-      .result-box .marks {
-        font-family: "Syne", sans-serif;
-        font-size: 32px;
-        font-weight: 800;
-        color: var(--green);
-      }
-      .result-box .out-of {
-        font-size: 14px;
-        color: #555;
-      }
-      .review-box {
-        background: #fff8e1;
-        border: 1px solid #ffe082;
-        border-radius: 12px;
-        padding: 14px 18px;
-        font-size: 13px;
-        color: #795548;
-        text-align: left;
-      }
+.field-hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
 
-      /* Expired state */
-      .expired-state {
-        text-align: center;
-        padding: 40px 20px;
-      }
-      .expired-state .icon {
-        font-size: 52px;
-        margin-bottom: 16px;
-      }
-      .expired-state h2 {
-        font-family: "Syne", sans-serif;
-        font-size: 22px;
-        color: var(--red);
-        margin-bottom: 8px;
-      }
-      .expired-state p {
-        font-size: 14px;
-        color: var(--muted);
-      }
+/* ── Upload Section ────────────────────────────────────────────────────────── */
+.upload-section { margin-bottom: 14px; }
 
-      /* Loading state */
-      .loading-state {
-        text-align: center;
-        padding: 40px 20px;
-      }
-      .spinner {
-        display: inline-block;
-        width: 40px;
-        height: 40px;
-        border: 3px solid #e2e8f0;
-        border-top-color: var(--blue);
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-        margin-bottom: 16px;
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
+/* Two big buttons: camera + file picker */
+.upload-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
 
-      .error-msg {
-        color: var(--red);
-        font-size: 13px;
-        margin-top: 8px;
-        display: none;
-      }
-      .info-note {
-        background: rgba(21, 101, 192, 0.06);
-        border-left: 3px solid var(--blue);
-        padding: 10px 14px;
-        border-radius: 0 8px 8px 0;
-        font-size: 12px;
-        color: var(--blue);
-        margin-bottom: 18px;
-        line-height: 1.5;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="page-wrap">
-      <div class="top-logo">Assign<span>Eval</span></div>
+.upload-btn {
+  position: relative;
+  background: var(--off);
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 20px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  overflow: hidden;
+}
+.upload-btn:hover, .upload-btn:active { border-color: var(--blue-lt); background: #EEF5FF; }
+.upload-btn input {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.upload-btn-icon { font-size: 28px; margin-bottom: 6px; }
+.upload-btn-label { font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
+.upload-btn-sub   { font-size: 10px; color: var(--muted); }
 
-      <div class="card" id="mainCard">
-        <!-- Loading state while fetching assignment details -->
-        <div class="card-body loading-state" id="loadingState">
-          <div class="spinner"></div>
-          <p style="color: var(--muted); font-size: 14px">
-            Loading assignment details...
-          </p>
-        </div>
-      </div>
+.upload-btn.camera-btn { border-color: rgba(255,107,53,0.3); background: #FFF5F2; }
+.upload-btn.camera-btn:hover { border-color: var(--orange); background: #FFE8E0; }
+.upload-btn.pdf-btn { border-color: rgba(21,101,192,0.3); background: #EEF5FF; }
+.upload-btn.pdf-btn:hover { border-color: var(--blue); background: #DDEEFF; }
+
+/* File preview */
+.file-preview {
+  display: none;
+  background: var(--off);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  align-items: center;
+  gap: 12px;
+}
+.file-preview.visible { display: flex; }
+.file-icon { font-size: 28px; flex-shrink: 0; }
+.file-info { flex: 1; min-width: 0; }
+.file-name-text {
+  font-size: 13px; font-weight: 600; color: var(--navy);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.file-size-text { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.file-remove {
+  background: none; border: none; color: var(--red); font-size: 18px;
+  cursor: pointer; padding: 4px; flex-shrink: 0;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* Upload info box */
+.upload-info {
+  background: #EEF5FF;
+  border-left: 3px solid var(--blue-lt);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #1A3A6E;
+  line-height: 1.5;
+}
+
+/* ── Error message ─────────────────────────────────────────────────────────── */
+.error-box {
+  display: none;
+  background: #FFF0F0;
+  border: 1px solid #FFCDD2;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--red);
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+/* ── Submit button ─────────────────────────────────────────────────────────── */
+.submit-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--blue);
+  color: var(--white);
+  border: none;
+  border-radius: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 54px;
+  position: relative;
+  overflow: hidden;
+}
+.submit-btn:hover:not(:disabled) {
+  background: var(--blue-lt);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(21,101,192,0.35);
+}
+.submit-btn:active:not(:disabled) { transform: translateY(0); }
+.submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+/* Progress bar inside button */
+.btn-progress {
+  position: absolute; inset: 0; left: 0;
+  background: rgba(255,255,255,0.15);
+  width: 0%;
+  transition: width 0.3s;
+}
+
+/* ── States ────────────────────────────────────────────────────────────────── */
+.spinner {
+  display: inline-block; width: 20px; height: 20px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white; border-radius: 50%;
+  animation: spin 0.7s linear infinite; vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Success screen ────────────────────────────────────────────────────────── */
+.success-screen {
+  display: none;
+  text-align: center;
+  padding: 40px 24px;
+  animation: fadeUp 0.4s ease;
+}
+@keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+.success-circle {
+  width: 80px; height: 80px;
+  background: linear-gradient(135deg, #00C896, #00A878);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px;
+  margin: 0 auto 20px;
+  box-shadow: 0 8px 24px rgba(0,200,150,0.35);
+}
+.success-title { font-size: 22px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+.success-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
+
+.result-summary {
+  background: var(--off);
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+.result-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.result-row:last-child { border-bottom: none; }
+.result-label { color: var(--muted); }
+.result-value { font-weight: 700; color: var(--navy); }
+.result-value.score { color: var(--blue); font-size: 16px; }
+
+.view-result-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--navy);
+  color: var(--white);
+  border: none;
+  border-radius: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.view-result-btn:hover { background: var(--navy2); }
+
+/* ── Expired / error state ─────────────────────────────────────────────────── */
+.state-screen {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 48px 24px;
+  text-align: center;
+  box-shadow: var(--card-shadow);
+}
+.state-icon { font-size: 52px; margin-bottom: 16px; }
+.state-title { font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+.state-msg { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+/* ── Loading skeleton ──────────────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, #E2E8F0 25%, #F0F4F8 50%, #E2E8F0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 8px;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+.skel-card { height: 140px; border-radius: 16px; margin-bottom: 16px; }
+.skel-form { height: 300px; border-radius: 16px; }
+
+/* ── Mobile safe area ──────────────────────────────────────────────────────── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .page { padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
+}
+
+/* ── Responsive tweaks ─────────────────────────────────────────────────────── */
+@media (max-width: 380px) {
+  .field-row { grid-template-columns: 1fr; }
+  .upload-methods { grid-template-columns: 1fr; }
+  .asgn-title { font-size: 17px; }
+}
+@media (min-width: 541px) {
+  .page { padding-top: 24px; padding-bottom: 60px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="brand">Assign<span>Eval</span></div>
+  <div class="secure-badge">🔒 Secure Submit</div>
+</div>
+
+<div class="page" id="mainPage">
+
+  <!-- Loading skeleton -->
+  <div id="loadingState">
+    <div class="skeleton skel-card"></div>
+    <div class="skeleton skel-form"></div>
+  </div>
+
+  <!-- Main content (hidden until loaded) -->
+  <div id="mainContent" style="display:none;">
+
+    <!-- Assignment header -->
+    <div class="assignment-card" id="assignmentCard"></div>
+
+    <!-- Success screen (hidden until submitted) -->
+    <div class="form-card success-screen" id="successScreen">
+      <div class="success-circle">✓</div>
+      <div class="success-title">Submitted Successfully!</div>
+      <div class="success-sub" id="successSub">Your assignment has been submitted and is being evaluated by AI.</div>
+      <div class="result-summary" id="resultSummary"></div>
+      <button class="view-result-btn" id="viewResultBtn">📊 View My Result</button>
     </div>
 
-    <script>
-      const API =
-        window.location.hostname === "localhost"
-          ? "http://localhost:5000/api"
-          : window.location.origin + "/api";
-      let assignment = null;
-      let selectedFile = null;
-      let countdownInterval = null;
+    <!-- Submission form -->
+    <div id="formArea">
 
-      // Get assignment ID from URL
-      const params = new URLSearchParams(window.location.search);
-      const assignmentId = params.get("assignment_id");
+      <!-- ── SECTION 1: Your Details ── -->
+      <div class="form-card">
+        <div class="form-card-title">👤 Your Details</div>
 
-      window.onload = async () => {
-        if (!assignmentId) {
-          showError("No assignment ID in URL.");
-          return;
-        }
-        await loadAssignment();
-      };
-
-      async function loadAssignment() {
-        try {
-          const res = await fetch(`${API}/assignment/${assignmentId}`);
-          const data = await res.json();
-
-          if (!res.ok) {
-            showError(data.error || "Assignment not found.");
-            return;
-          }
-
-          assignment = data;
-
-          if (data.is_expired) {
-            showExpiredState();
-          } else {
-            showSubmitForm();
-          }
-        } catch (err) {
-          showError(
-            "Could not connect to server. Make sure the backend is running on port 5000.",
-          );
-        }
-      }
-
-      function showSubmitForm() {
-        const card = document.getElementById("mainCard");
-        card.innerHTML = `
-    <div class="card-header">
-      <div class="assignment-id-badge">ASSIGNMENT · ${assignment.assignment_id}</div>
-      <h1>${assignment.title}</h1>
-      <div class="meta">${assignment.subject} · Max Marks: ${assignment.max_marks} · By ${assignment.teacher_name}</div>
-      <div class="deadline-box">
-        <div>
-          <div class="deadline-label">Deadline</div>
-          <div class="deadline-time">${assignment.deadline_formatted}</div>
+        <div class="field">
+          <label>Full Name <span class="required-star">*</span></label>
+          <input type="text" id="studentName" placeholder="e.g. Gowtham R"
+                 autocomplete="name" autocapitalize="words" inputmode="text">
         </div>
-        <div style="margin-left:auto;">
-          <div class="deadline-label">Time Left</div>
-          <div class="countdown" id="countdown">Calculating...</div>
-        </div>
-      </div>
-    </div>
-    <div class="card-body">
-      <div class="info-note">
-        📌 Submit your assignment as a <strong>PDF file</strong> before the deadline.
-        Typed PDFs are evaluated automatically. Handwritten PDFs are evaluated via AI Vision.
-      </div>
 
-      <div id="submitForm">
-        <div class="form-group">
-          <label>Full Name</label>
-          <input type="text" id="studentName" placeholder="e.g. Rishik Kumar">
-        </div>
-        <div class="form-group">
-          <label>Roll Number</label>
-          <input type="text" id="rollNumber" placeholder="e.g. RA2211003010123">
-        </div>
-        <div class="form-group">
-          <label>Email (Optional)</label>
-          <input type="email" id="studentEmail" placeholder="e.g. rishik@srmist.edu.in">
-        </div>
-        <div class="form-group">
-          <label>Assignment PDF</label>
-          <div class="drop-zone" id="dropZone">
-            <input type="file" accept=".pdf" id="fileInput" onchange="fileSelected(this)">
-            <div class="drop-icon">📄</div>
-            <div class="drop-text">Click to select or drag & drop</div>
-            <div class="drop-hint">Only PDF files accepted · Max 20MB</div>
-            <div class="file-name" id="fileName"></div>
+        <div class="field-row">
+          <div class="field">
+            <label>Roll Number <span class="required-star">*</span></label>
+            <input type="text" id="rollNumber" placeholder="e.g. RA2511047020047"
+                   autocomplete="off" autocapitalize="characters" inputmode="text"
+                   style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+          </div>
+          <div class="field">
+            <label>Section / Class</label>
+            <input type="text" id="section" placeholder="e.g. CSE-A / 2A"
+                   autocomplete="off" autocapitalize="characters" inputmode="text">
           </div>
         </div>
-        <div class="error-msg" id="errorMsg"></div>
-        <button class="submit-btn" id="submitBtn" onclick="submitAssignment()">
-          Submit Assignment
-        </button>
-        <div class="progress-bar" id="progressBar">
-          <div class="progress-fill" id="progressFill"></div>
+
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" id="studentEmail" placeholder="you@srmist.edu.in"
+                 autocomplete="email" inputmode="email">
+          <div class="field-hint">Optional — used to send you your result</div>
+        </div>
+
+        <div class="field">
+          <label>Phone Number</label>
+          <input type="tel" id="studentPhone" placeholder="e.g. 9876543210"
+                 autocomplete="tel" inputmode="numeric" maxlength="10">
+          <div class="field-hint">Optional — for teacher to contact you if needed</div>
+        </div>
+
+      </div>
+
+      <!-- ── SECTION 2: Upload Assignment ── -->
+      <div class="form-card">
+        <div class="form-card-title">📎 Upload Assignment</div>
+
+        <div class="upload-section">
+
+          <!-- Upload method buttons -->
+          <div class="upload-methods" id="uploadMethods">
+
+            <!-- Camera — for handwritten on mobile -->
+            <label class="upload-btn camera-btn">
+              <input type="file" id="cameraInput"
+                     accept="image/*"
+                     capture="environment"
+                     onchange="handleFileSelect(this, 'camera')">
+              <div class="upload-btn-icon">📷</div>
+              <div class="upload-btn-label">Take Photo</div>
+              <div class="upload-btn-sub">Handwritten work</div>
+            </label>
+
+            <!-- PDF / gallery picker -->
+            <label class="upload-btn pdf-btn">
+              <input type="file" id="fileInput"
+                     accept=".pdf,image/*"
+                     onchange="handleFileSelect(this, 'file')">
+              <div class="upload-btn-icon">📂</div>
+              <div class="upload-btn-label">Choose File</div>
+              <div class="upload-btn-sub">PDF or image</div>
+            </label>
+
+          </div>
+
+          <!-- File preview -->
+          <div class="file-preview" id="filePreview">
+            <div class="file-icon" id="filePreviewIcon">📄</div>
+            <div class="file-info">
+              <div class="file-name-text" id="filePreviewName">filename.pdf</div>
+              <div class="file-size-text" id="filePreviewSize">0 MB</div>
+            </div>
+            <button class="file-remove" onclick="removeFile()" title="Remove file">✕</button>
+          </div>
+
+          <!-- Info note -->
+          <div class="upload-info" style="margin-top:12px;">
+            📱 <strong>On mobile:</strong> Tap <em>Take Photo</em> to photograph your handwritten answer sheet, or <em>Choose File</em> to upload a PDF or image from your gallery.<br>
+            🖥 <strong>On PC:</strong> Upload a scanned PDF or image of your work.
+          </div>
+
         </div>
       </div>
+
+      <!-- Error box -->
+      <div class="error-box" id="errorBox"></div>
+
+      <!-- Submit button -->
+      <button class="submit-btn" id="submitBtn" onclick="submitAssignment()">
+        <div class="btn-progress" id="btnProgress"></div>
+        <span id="submitBtnText">🚀 Submit Assignment</span>
+      </button>
+
+    </div><!-- /formArea -->
+
+  </div><!-- /mainContent -->
+
+  <!-- Expired state (injected if past deadline) -->
+  <!-- Error state (injected if assignment not found) -->
+
+</div><!-- /page -->
+
+<script>
+// ── Config ──────────────────────────────────────────────────────────────────
+const API = window.location.hostname === "localhost"
+  ? "http://localhost:5000/api"
+  : window.location.origin + "/api";
+
+let assignment      = null;
+let selectedFile    = null;
+let selectedSource  = null; // 'camera' or 'file'
+let countdownTimer  = null;
+let resultData      = null;
+
+// ── Init ────────────────────────────────────────────────────────────────────
+window.addEventListener("DOMContentLoaded", () => {
+  const params       = new URLSearchParams(window.location.search);
+  const assignmentId = params.get("assignment_id");
+
+  if (!assignmentId) {
+    showFatalError("No assignment ID in this link. Please ask your teacher for the correct link.");
+    return;
+  }
+  loadAssignment(assignmentId);
+});
+
+async function loadAssignment(id) {
+  try {
+    const res  = await fetch(`${API}/assignment/${id}`);
+    const data = await res.json();
+
+    if (!res.ok) {
+      showFatalError(data.error || "Assignment not found. Check with your teacher.");
+      return;
+    }
+
+    assignment = data;
+    document.getElementById("loadingState").style.display  = "none";
+    document.getElementById("mainContent").style.display   = "block";
+    document.title = `${data.title} — Submit`;
+
+    if (data.is_expired) {
+      showExpired(data);
+    } else {
+      renderAssignmentCard(data);
+      startCountdown(data.deadline);
+    }
+
+  } catch(e) {
+    showFatalError("Could not connect to the server. Check your internet connection and try again.");
+  }
+}
+
+// ── Assignment card ──────────────────────────────────────────────────────────
+function renderAssignmentCard(a) {
+  document.getElementById("assignmentCard").innerHTML = `
+    <div class="asgn-id">ASSIGNMENT · ${a.assignment_id}</div>
+    <div class="asgn-title">${a.title}</div>
+    <div class="asgn-meta">${a.subject} · ${a.teacher_name}</div>
+    <div class="asgn-pills">
+      <div class="pill marks">🎯 Max: ${a.max_marks} marks</div>
+      <div class="pill deadline">📅 ${a.deadline_formatted}</div>
+      <div class="pill countdown" id="countdownPill">⏱ Calculating...</div>
+    </div>
+  `;
+}
+
+// ── Countdown ────────────────────────────────────────────────────────────────
+function startCountdown(deadline) {
+  const end = new Date(deadline);
+  function tick() {
+    const diff = end - new Date();
+    const el   = document.getElementById("countdownPill");
+    if (!el) return;
+    if (diff <= 0) {
+      el.textContent = "⏰ CLOSED";
+      el.style.background = "rgba(255,71,87,0.2)";
+      el.style.color = "#FF4757";
+      clearInterval(countdownTimer);
+      return;
+    }
+    const d  = Math.floor(diff / 86400000);
+    const h  = Math.floor((diff % 86400000) / 3600000);
+    const m  = Math.floor((diff % 3600000) / 60000);
+    const s  = Math.floor((diff % 60000) / 1000);
+    el.textContent = d > 0 ? `⏱ ${d}d ${h}h ${m}m` : `⏱ ${h}h ${m}m ${s}s`;
+    // Turn red when < 1 hour
+    if (diff < 3600000) {
+      el.style.background = "rgba(255,71,87,0.2)";
+      el.style.color = "#FF9EA5";
+    }
+  }
+  tick();
+  countdownTimer = setInterval(tick, 1000);
+}
+
+// ── File handling ────────────────────────────────────────────────────────────
+function handleFileSelect(input, source) {
+  const file = input.files[0];
+  if (!file) return;
+
+  // Size check — 30MB limit
+  if (file.size > 30 * 1024 * 1024) {
+    showError("File is too large. Maximum size is 30MB. Please compress or reduce image quality.");
+    input.value = "";
+    return;
+  }
+
+  // If it's an image from camera, we'll convert to PDF on the backend
+  // Accept both PDF and images
+  const isImage = file.type.startsWith("image/");
+  const isPDF   = file.type === "application/pdf" || file.name.endsWith(".pdf");
+
+  if (!isImage && !isPDF) {
+    showError("Only PDF files or images (JPG, PNG) are accepted.");
+    input.value = "";
+    return;
+  }
+
+  selectedFile   = file;
+  selectedSource = source;
+
+  // Update preview
+  const icon   = isPDF ? "📄" : "🖼️";
+  const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+  document.getElementById("filePreviewIcon").textContent = icon;
+  document.getElementById("filePreviewName").textContent  = file.name;
+  document.getElementById("filePreviewSize").textContent  = `${sizeMB} MB · ${isImage ? "Image" : "PDF"}`;
+  document.getElementById("filePreview").classList.add("visible");
+  document.getElementById("uploadMethods").style.opacity = "0.5";
+
+  hideError();
+}
+
+function removeFile() {
+  selectedFile = null;
+  selectedSource = null;
+  document.getElementById("cameraInput").value = "";
+  document.getElementById("fileInput").value   = "";
+  document.getElementById("filePreview").classList.remove("visible");
+  document.getElementById("uploadMethods").style.opacity = "1";
+}
+
+// ── Submit ───────────────────────────────────────────────────────────────────
+async function submitAssignment() {
+  const name    = document.getElementById("studentName").value.trim();
+  const roll    = document.getElementById("rollNumber").value.trim().toUpperCase();
+  const section = document.getElementById("section").value.trim();
+  const email   = document.getElementById("studentEmail").value.trim();
+  const phone   = document.getElementById("studentPhone").value.trim();
+
+  // Validate required fields
+  if (!name)         { showError("Please enter your full name.");         scrollToField("studentName"); return; }
+  if (!roll)         { showError("Please enter your roll number.");       scrollToField("rollNumber");  return; }
+  if (!selectedFile) { showError("Please upload your assignment file (photo or PDF)."); return; }
+
+  hideError();
+
+  const btn     = document.getElementById("submitBtn");
+  const btnText = document.getElementById("submitBtnText");
+  btn.disabled  = true;
+  btnText.innerHTML = '<span class="spinner"></span> Uploading & Evaluating...';
+
+  // Simulate progress
+  let prog = 0;
+  const progEl = document.getElementById("btnProgress");
+  const progTimer = setInterval(() => {
+    prog = Math.min(prog + 2, 85);
+    progEl.style.width = prog + "%";
+  }, 200);
+
+  try {
+    const fd = new FormData();
+    fd.append("student_name", name);
+    fd.append("roll_number",  roll);
+    fd.append("section",      section);
+    fd.append("email",        email);
+    fd.append("phone",        phone);
+
+    // If camera image, send as 'file' with PDF flag for backend awareness
+    fd.append("file",         selectedFile);
+    fd.append("source_type",  selectedSource || "file");
+
+    const res  = await fetch(`${API}/submit/${assignment.assignment_id}`, {
+      method: "POST",
+      body: fd
+    });
+    const data = await res.json();
+
+    clearInterval(progTimer);
+    progEl.style.width = "100%";
+
+    if (!res.ok) {
+      showError(data.error || "Submission failed. Please try again.");
+      btn.disabled = false;
+      btnText.textContent = "🚀 Submit Assignment";
+      progEl.style.width = "0%";
+      return;
+    }
+
+    resultData = data;
+    showSuccess(data, name, roll);
+
+  } catch(e) {
+    clearInterval(progTimer);
+    progEl.style.width = "0%";
+    showError("Network error. Please check your internet connection and try again.");
+    btn.disabled = false;
+    btnText.textContent = "🚀 Submit Assignment";
+  }
+}
+
+// ── Success screen ───────────────────────────────────────────────────────────
+function showSuccess(data, name, roll) {
+  document.getElementById("formArea").style.display    = "none";
+  const successEl = document.getElementById("successScreen");
+  successEl.style.display = "block";
+
+  const preview    = data.result_preview || {};
+  const marks      = preview.marks ?? "—";
+  const maxMarks   = preview.max_marks ?? assignment.max_marks;
+  const needsReview = preview.needs_review;
+
+  document.getElementById("successSub").textContent = needsReview
+    ? "Your assignment has been submitted. Your teacher will review and approve your marks."
+    : `Submitted and AI-evaluated! Your initial score is ${marks}/${maxMarks}.`;
+
+  document.getElementById("resultSummary").innerHTML = `
+    <div class="result-row">
+      <span class="result-label">Student</span>
+      <span class="result-value">${name}</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Roll Number</span>
+      <span class="result-value">${roll}</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Assignment</span>
+      <span class="result-value">${assignment.title}</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">AI Score</span>
+      <span class="result-value score">${marks} / ${maxMarks}</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Status</span>
+      <span class="result-value" style="color:${needsReview ? '#F57F17' : '#2E7D32'}">
+        ${needsReview ? "⏳ Pending Teacher Review" : "✅ AI Evaluated"}
+      </span>
     </div>
   `;
 
-        startCountdown();
-        setupDragDrop();
-      }
+  document.getElementById("viewResultBtn").onclick = () => {
+    window.location.href = `result.html?assignment_id=${assignment.assignment_id}&roll_number=${roll}`;
+  };
 
-      function showExpiredState() {
-        const card = document.getElementById("mainCard");
-        card.innerHTML = `
-    <div class="card-header">
-      <div class="assignment-id-badge">ASSIGNMENT · ${assignment.assignment_id}</div>
-      <h1>${assignment.title}</h1>
-    </div>
-    <div class="card-body">
-      <div class="expired-state">
-        <div class="icon">⏰</div>
-        <h2>Submission Closed</h2>
-        <p>The deadline for this assignment was <strong>${assignment.deadline_formatted}</strong>.<br>Submissions are no longer accepted.</p>
-        <p style="margin-top:16px;font-size:12px;color:#aaa;">Contact your teacher if you think this is an error.</p>
-      </div>
-    </div>
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// ── States ───────────────────────────────────────────────────────────────────
+function showExpired(a) {
+  document.getElementById("formArea").style.display = "none";
+  document.getElementById("assignmentCard").innerHTML = `
+    <div class="asgn-id">ASSIGNMENT · ${a.assignment_id}</div>
+    <div class="asgn-title">${a.title}</div>
+    <div class="asgn-meta">${a.subject} · ${a.teacher_name}</div>
+    <div class="asgn-pills"><div class="pill deadline">📅 ${a.deadline_formatted}</div></div>
   `;
-      }
-
-      function showError(msg) {
-        const card = document.getElementById("mainCard");
-        card.innerHTML = `
-    <div class="card-body" style="text-align:center;padding:40px 20px;">
-      <div style="font-size:48px;margin-bottom:16px;">❌</div>
-      <h3 style="font-family:'Syne',sans-serif;color:var(--red);margin-bottom:8px;">Error</h3>
-      <p style="font-size:14px;color:var(--muted);">${msg}</p>
-    </div>
+  const info = document.createElement("div");
+  info.className = "state-screen";
+  info.innerHTML = `
+    <div class="state-icon">⏰</div>
+    <div class="state-title">Submission Closed</div>
+    <div class="state-msg">The deadline for <strong>${a.title}</strong> was <strong>${a.deadline_formatted}</strong>.<br><br>Submissions are no longer accepted. Contact your teacher if you think this is an error.</div>
   `;
-      }
+  document.getElementById("mainContent").appendChild(info);
+}
 
-      function startCountdown() {
-        const deadline = new Date(assignment.deadline);
-        function update() {
-          const now = new Date();
-          const diff = deadline - now;
-          if (diff <= 0) {
-            document.getElementById("countdown").textContent = "EXPIRED";
-            showExpiredState();
-            clearInterval(countdownInterval);
-            return;
-          }
-          const days = Math.floor(diff / 86400000);
-          const hrs = Math.floor((diff % 86400000) / 3600000);
-          const mins = Math.floor((diff % 3600000) / 60000);
-          const secs = Math.floor((diff % 60000) / 1000);
-          const el = document.getElementById("countdown");
-          if (el)
-            el.textContent =
-              days > 0
-                ? `${days}d ${hrs}h ${mins}m`
-                : `${hrs}h ${mins}m ${secs}s`;
-        }
-        update();
-        countdownInterval = setInterval(update, 1000);
-      }
-
-      function fileSelected(input) {
-        if (input.files[0]) {
-          selectedFile = input.files[0];
-          const dz = document.getElementById("dropZone");
-          dz.classList.add("file-selected");
-          document.getElementById("fileName").textContent =
-            `✓ ${selectedFile.name} (${(selectedFile.size / 1024 / 1024).toFixed(2)} MB)`;
-        }
-      }
-
-      function setupDragDrop() {
-        const dz = document.getElementById("dropZone");
-        if (!dz) return;
-        dz.addEventListener("dragover", (e) => {
-          e.preventDefault();
-          dz.classList.add("dragover");
-        });
-        dz.addEventListener("dragleave", () => dz.classList.remove("dragover"));
-        dz.addEventListener("drop", (e) => {
-          e.preventDefault();
-          dz.classList.remove("dragover");
-          const files = e.dataTransfer.files;
-          if (files[0] && files[0].type === "application/pdf") {
-            selectedFile = files[0];
-            dz.classList.add("file-selected");
-            document.getElementById("fileName").textContent =
-              `✓ ${selectedFile.name}`;
-          } else {
-            showFormError("Only PDF files are accepted.");
-          }
-        });
-      }
-
-      async function submitAssignment() {
-        const name = document.getElementById("studentName").value.trim();
-        const roll = document.getElementById("rollNumber").value.trim();
-        const email = document.getElementById("studentEmail").value.trim();
-        const errorEl = document.getElementById("errorMsg");
-
-        if (!name || !roll) {
-          showFormError("Please fill in your name and roll number.");
-          return;
-        }
-        if (!selectedFile) {
-          showFormError("Please select your PDF file.");
-          return;
-        }
-
-        errorEl.style.display = "none";
-
-        const btn = document.getElementById("submitBtn");
-        btn.disabled = true;
-        btn.innerHTML = `<span class="spinner" style="width:18px;height:18px;border-width:2px;"></span> Submitting & Evaluating...`;
-
-        // Show progress bar
-        const pb = document.getElementById("progressBar");
-        const pf = document.getElementById("progressFill");
-        pb.style.display = "block";
-
-        // Simulate progress
-        let prog = 0;
-        const progInterval = setInterval(() => {
-          prog = Math.min(prog + Math.random() * 15, 85);
-          pf.style.width = prog + "%";
-        }, 500);
-
-        try {
-          const formData = new FormData();
-          formData.append("file", selectedFile);
-          formData.append("student_name", name);
-          formData.append("roll_number", roll);
-          formData.append("email", email);
-
-          const res = await fetch(`${API}/submit/${assignmentId}`, {
-            method: "POST",
-            body: formData,
-          });
-
-          const data = await res.json();
-          clearInterval(progInterval);
-          pf.style.width = "100%";
-
-          if (!res.ok) {
-            showFormError(data.message || data.error || "Submission failed.");
-            btn.disabled = false;
-            btn.textContent = "Submit Assignment";
-            pb.style.display = "none";
-            return;
-          }
-
-          // Success!
-          setTimeout(() => showSuccessState(data, name, roll), 400);
-        } catch (err) {
-          clearInterval(progInterval);
-          showFormError("Connection error. Make sure the server is running.");
-          btn.disabled = false;
-          btn.textContent = "Submit Assignment";
-          pb.style.display = "none";
-        }
-      }
-
-      function showSuccessState(data, name, roll) {
-        const card = document.getElementById("mainCard");
-        const preview = data.result_preview || {};
-        const marks = preview.marks ?? "—";
-        const maxM = preview.max_marks ?? assignment.max_marks;
-        const needsReview = preview.needs_review;
-
-        card.innerHTML = `
-    <div class="card-header" style="background:var(--green);">
-      <div class="assignment-id-badge" style="color:rgba(255,255,255,0.7);">SUBMISSION RECEIVED</div>
-      <h1 style="color:var(--white);">${assignment.title}</h1>
-    </div>
-    <div class="card-body">
-      <div style="text-align:center;padding:8px 0 20px;">
-        <div style="font-size:52px;margin-bottom:12px;">✅</div>
-        <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--green);margin-bottom:6px;">Submitted Successfully!</h2>
-        <p style="font-size:14px;color:var(--muted);">Hello <strong>${name}</strong>, your assignment has been received and evaluated.</p>
-      </div>
-
-      ${
-        !needsReview
-          ? `
-      <div class="result-box" style="text-align:center;margin-bottom:16px;">
-        <div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;">Your Score</div>
-        <div class="marks">${marks}<span style="font-size:18px;color:var(--muted);font-weight:400"> / ${maxM}</span></div>
-        <div class="out-of">Evaluated by AI</div>
-      </div>`
-          : ""
-      }
-
-      ${
-        needsReview
-          ? `
-      <div class="review-box">
-        ⚠️ Your submission has been received. It contains handwritten or image content and has been flagged for your teacher's review. Your marks will be confirmed by the teacher.
-      </div>`
-          : ""
-      }
-
-      <div style="background:var(--off);border-radius:10px;padding:14px 16px;margin-top:16px;font-size:13px;color:var(--muted);">
-        <div>🎓 Assignment: <strong style="color:var(--text);">${assignment.title}</strong></div>
-        <div>📋 Submission ID: <code style="font-family:'JetBrains Mono',monospace;color:var(--blue);">${data.submission_id}</code></div>
-        <div>🆔 Your Roll Number: <strong style="color:var(--text);">${roll}</strong></div>
-      </div>
-
-      <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:16px;">
-        Use your roll number to check results later: 
-        <a href="result.html?assignment_id=${assignmentId}&roll=${encodeURIComponent(roll)}" style="color:var(--blue);">View Result →</a>
-      </p>
-    </div>
+function showFatalError(msg) {
+  document.getElementById("loadingState").style.display = "none";
+  document.getElementById("mainContent").style.display = "block";
+  const el = document.createElement("div");
+  el.className = "state-screen";
+  el.innerHTML = `
+    <div class="state-icon">❌</div>
+    <div class="state-title">Something went wrong</div>
+    <div class="state-msg">${msg}</div>
   `;
-      }
+  document.getElementById("mainContent").appendChild(el);
+}
 
-      function showFormError(msg) {
-        const el = document.getElementById("errorMsg");
-        if (el) {
-          el.textContent = msg;
-          el.style.display = "block";
-        }
-      }
-    </script>
-  </body>
+// ── Error helpers ────────────────────────────────────────────────────────────
+function showError(msg) {
+  const el = document.getElementById("errorBox");
+  el.textContent = "⚠ " + msg;
+  el.style.display = "block";
+  el.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+function hideError() {
+  document.getElementById("errorBox").style.display = "none";
+}
+function scrollToField(id) {
+  const el = document.getElementById(id);
+  if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.focus(); }
+}
+</script>
+</body>
 </html>
