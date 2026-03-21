@@ -36,9 +36,21 @@ def serve_pages(filename):
 
 @app.route("/<path:path>")
 def serve_static(path):
-    if path.startswith("api/"): from flask import abort; abort(404)
+    if path.startswith("api/"):
+        return jsonify({"error": f"Route not found: /{path}"}), 404
     fp = os.path.join(os.path.dirname(__file__),"../frontend",path)
     return send_from_directory(os.path.dirname(fp), os.path.basename(fp)) if os.path.exists(fp) else send_from_directory("../frontend","index.html")
+
+# Return JSON for all unhandled errors
+@app.errorhandler(404)
+def not_found(e):
+    if request.path.startswith("/api/"):
+        return jsonify({"error": "API route not found", "path": request.path}), 404
+    return send_from_directory("../frontend","index.html")
+
+@app.errorhandler(500)
+def server_error(e):
+    return jsonify({"error": "Internal server error", "detail": str(e)}), 500
 
 # ── AUTH ──────────────────────────────────────────────────────────────────────
 @app.route("/api/auth/register", methods=["POST"])

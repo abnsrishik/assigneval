@@ -761,7 +761,13 @@ async function createAssignment() {
     generatedRubric = "";
 
   } catch(e) {
-    alert("Error: " + e.message);
+    let msg = e.message;
+    if (msg.includes("<!doctype") || msg.includes("not valid JSON")) {
+      msg = "Server route not found. Please push the latest app.py to GitHub and redeploy.";
+    } else if (msg === "Failed to fetch") {
+      msg = "Cannot reach server. Wait 30 seconds and try again.";
+    }
+    alert("Error creating assignment: " + msg);
   }
   btn.disabled = false;
   btn.textContent = "🚀 Create Assignment & Generate Link";
