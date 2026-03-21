@@ -744,7 +744,9 @@ async function createAssignment() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Failed");
 
-    const base = "http://localhost:5000";
+    const base = window.location.hostname === "localhost"
+      ? "http://localhost:5000"
+      : window.location.origin;
     document.getElementById("submissionLinkText").textContent = `${base}/pages/submit.html?assignment_id=${data.assignment_id}`;
     document.getElementById("resultsLinkText").textContent    = `${base}/pages/results.html?assignment_id=${data.assignment_id}`;
     document.getElementById("assignmentIdText").textContent   = data.assignment_id;

@@ -210,12 +210,28 @@ def _get_working_vision_model(client):
 
 def _ocr_pages(client, file_path):
     """
-    Extract text from PDF pages using Groq vision.
+    Extract text from PDF pages or image files using Groq vision.
+    Handles: PDF (multi-page), JPG, PNG, WEBP from mobile camera.
     Auto-detects the correct vision model name for this account.
     """
     pages = []
     vision_model = _get_working_vision_model(client)
+    ext = os.path.splitext(file_path)[1].lower()
 
+    # ── Direct image file (camera photo from mobile) ───────────────────────
+    if ext in (".jpg", ".jpeg", ".png", ".webp"):
+        try:
+            with open(file_path, "rb") as img_f:
+                b64 = base64.b64encode(img_f.read()).decode()
+            print(f"[OCR] Direct image upload ({ext}), size: {len(b64)//1024}KB")
+            page_text = _vision_ocr_page(client, b64, 1, vision_model)
+            if page_text:
+                pages.append(f"--- Page 1 ---\n{page_text}")
+        except Exception as e:
+            print(f"[OCR] Image OCR error: {e}")
+        return "\n\n".join(pages)
+
+    # ── PDF file ────────────────────────────────────────────────────────────
     try:
         doc = fitz.open(file_path)
         total_pages = len(doc)

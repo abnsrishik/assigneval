@@ -339,24 +339,37 @@ def submit_assignment(assignment_id):
     a  = dict(a)
     if datetime.now() > datetime.fromisoformat(a["deadline"]):
         return jsonify({"error":"Submission deadline has passed"}), 403
-    name  = request.form.get("student_name","").strip()
-    roll  = request.form.get("roll_number","").strip()
-    email = request.form.get("email","").strip()
+    name    = request.form.get("student_name","").strip()
+    roll    = request.form.get("roll_number","").strip().upper()
+    email   = request.form.get("email","").strip()
+    section = request.form.get("section","").strip()
+    phone   = request.form.get("phone","").strip()
     if not name or not roll: return jsonify({"error":"Name and roll number required"}), 400
     if db.execute("SELECT id FROM submissions WHERE assignment_id=? AND roll_number=?",(assignment_id,roll)).fetchone():
         return jsonify({"error":"You have already submitted this assignment"}), 409
     if "file" not in request.files: return jsonify({"error":"No file uploaded"}), 400
     file = request.files["file"]
-    if not file.filename.lower().endswith(".pdf"): return jsonify({"error":"Only PDF files accepted"}), 400
-    fname = f"{assignment_id}_{roll}_{int(datetime.now().timestamp())}.pdf"
+    fname_lower = file.filename.lower()
+    allowed_exts = (".pdf", ".jpg", ".jpeg", ".png", ".webp")
+    if not any(fname_lower.endswith(ext) for ext in allowed_exts):
+        return jsonify({"error":"Only PDF or image files (JPG, PNG) accepted"}), 400
+    ext   = os.path.splitext(file.filename)[1].lower() or ".pdf"
+    fname = f"{assignment_id}_{roll}_{int(datetime.now().timestamp())}{ext}"
     fpath = os.path.join(UPLOAD_FOLDER, fname)
     file.save(fpath)
     text, has_images, page_count = _extract_pdf(fpath)
     clean_text = text.strip()
     words      = len(clean_text.split())
-    if words >= 100:    stype = "typed"
-    elif words >= 20 and has_images: stype = "mixed"
-    else:               stype = "handwritten"
+    # If uploaded file is an image (camera photo), always treat as handwritten
+    is_image_upload = not fname.lower().endswith(".pdf")
+    if is_image_upload:
+        stype = "handwritten"
+    elif words >= 100:
+        stype = "typed"
+    elif words >= 20 and has_images:
+        stype = "mixed"
+    else:
+        stype = "handwritten"
     print(f"[Submit] type={stype}, words={words}, images={has_images}, pages={page_count}")
     ev = evaluate_submission(text,a["rubric"],a["max_marks"],stype,file_path=fpath)
     sid = str(uuid.uuid4())[:8].upper()
@@ -371,6 +384,13 @@ def submit_assignment(assignment_id):
         (sid,assignment_id,name,roll,email,student_id,fname,stype,
          text[:3000],ev["marks"],ev["feedback"],json.dumps(ev.get("breakdown",[])),
          ev["marks"],a["max_marks"],1 if ev["needs_review"] else 0,datetime.now().isoformat()))
+    # Store extra student info in submission metadata (section, phone) via json feedback note
+    if section or phone:
+        meta_note = []
+        if section: meta_note.append(f"Section: {section}")
+        if phone:   meta_note.append(f"Phone: {phone}")
+        db.execute("UPDATE submissions SET extracted_text=? WHERE submission_id=?",
+            (f"[{' | '.join(meta_note)}]\n\n" + text[:3000], sid))
     db.commit()
     return jsonify({"success":True,"submission_id":sid,"result_preview":{"marks":ev["marks"],"max_marks":a["max_marks"],"needs_review":ev["needs_review"]}})
 

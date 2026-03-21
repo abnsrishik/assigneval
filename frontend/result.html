@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Result — Assignment Evaluator</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0D1B2A;--blue:#1565C0;--blue-lt:#1E88E5;--orange:#FF6B35;
+  --white:#fff;--off:#F0F4F8;--muted:#607D8B;--text:#1A2332;
+  --green:#2E7D32;--red:#C62828;--amber:#F57F17;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--off);min-height:100vh;}
+
+header{background:var(--navy);padding:14px 28px;display:flex;align-items:center;
+  justify-content:space-between;border-bottom:3px solid var(--orange);}
+.logo{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;text-decoration:none;}
+.logo span{color:var(--orange);}
+.hbtn{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;
+  border:none;font-family:'DM Sans',sans-serif;text-decoration:none;
+  background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);}
+
+.wrap{max-width:720px;margin:0 auto;padding:32px 20px;}
+
+/* Lookup form */
+.lookup-card{background:#fff;border:1px solid #E2E8F0;border-radius:20px;
+  padding:32px;margin-bottom:24px;}
+.lookup-card h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;
+  color:var(--text);margin-bottom:6px;}
+.lookup-card p{font-size:13px;color:var(--muted);margin-bottom:24px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+.fgroup label{display:block;font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px;}
+.fgroup input{width:100%;padding:10px 14px;border:1.5px solid #E2E8F0;
+  border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;
+  outline:none;background:var(--off);}
+.fgroup input:focus{border-color:var(--blue-lt);background:#fff;}
+.lookup-btn{width:100%;padding:12px;background:var(--blue);color:#fff;border:none;
+  border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+.lookup-btn:hover{background:var(--blue-lt);}
+
+/* Result card */
+.result-card{background:#fff;border:1px solid #E2E8F0;border-radius:20px;
+  overflow:hidden;margin-bottom:20px;}
+
+.result-header{background:var(--navy);padding:20px 24px;}
+.result-header h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;
+  color:#fff;margin-bottom:2px;}
+.result-header-sub{font-size:12px;color:#90A4AE;}
+
+/* Big score */
+.score-hero{display:flex;align-items:center;gap:28px;padding:28px 28px 20px;
+  border-bottom:1px solid #F0F4F8;}
+.big-ring{position:relative;width:120px;height:120px;flex-shrink:0;}
+.big-ring svg{transform:rotate(-90deg);}
+.ring-bg{fill:none;stroke:#E2E8F0;stroke-width:8;}
+.ring-fill{fill:none;stroke-width:8;stroke-linecap:round;}
+.ring-inner{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;font-family:'Syne',sans-serif;}
+.ring-marks{font-size:22px;font-weight:900;line-height:1;}
+.ring-denom{font-size:12px;color:var(--muted);}
+.score-details{flex:1;}
+.score-pct{font-family:'Syne',sans-serif;font-size:36px;font-weight:900;line-height:1;}
+.score-grade{font-size:16px;font-weight:700;margin-top:4px;}
+.score-cgpa{font-size:13px;color:var(--muted);margin-top:6px;}
+.score-source{display:inline-flex;align-items:center;gap:6px;margin-top:8px;
+  padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;}
+.source-ai{background:#E3F2FD;color:#1565C0;}
+.source-teacher{background:#E8F5E9;color:#2E7D32;}
+
+/* Type notice */
+.type-notice{display:flex;align-items:center;gap:10px;padding:12px 20px;
+  font-size:13px;border-bottom:1px solid #F0F4F8;}
+.type-notice-hw{background:#F3E5F5;color:#4A148C;}
+.type-notice-mixed{background:#FFF8E1;color:#E65100;}
+.type-notice-typed{background:#E3F2FD;color:#0D47A1;}
+
+/* Breakdown */
+.section-wrap{padding:20px 24px;border-bottom:1px solid #F0F4F8;}
+.section-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;
+  color:var(--text);margin-bottom:14px;}
+.bk-row{display:grid;grid-template-columns:1fr auto;gap:12px;
+  padding:12px 0;border-bottom:1px solid #F5F7FA;}
+.bk-row:last-child{border-bottom:none;}
+.bk-q{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;}
+.bk-correct{font-size:12px;color:#2E7D32;margin-bottom:3px;}
+.bk-missing{font-size:12px;color:#C62828;margin-bottom:3px;}
+.bk-reason{font-size:11px;color:var(--muted);font-style:italic;}
+.bk-marks{text-align:center;min-width:70px;}
+.bk-marks-num{font-family:'Syne',sans-serif;font-size:20px;font-weight:900;}
+.bk-marks-max{font-size:11px;color:var(--muted);}
+.bk-bar{height:5px;background:#E2E8F0;border-radius:3px;margin-top:6px;overflow:hidden;}
+.bk-bar-fill{height:100%;border-radius:3px;transition:width 0.5s;}
+
+/* Feedback */
+.feedback-wrap{padding:20px 24px;}
+.feedback-box{background:#F8F9FA;border:1px solid #E2E8F0;border-radius:12px;
+  padding:18px;font-size:14px;line-height:1.75;color:#37474F;}
+.pending-notice{background:#FFF8E1;border:1.5px solid #FDD835;border-radius:12px;
+  padding:16px;margin-bottom:20px;font-size:13px;color:#E65100;}
+.pending-notice strong{display:block;font-size:14px;margin-bottom:4px;}
+
+.meta-row{display:flex;flex-wrap:wrap;gap:20px;padding:16px 24px;
+  background:#FAFBFC;border-top:1px solid #F0F4F8;}
+.meta-item label{display:block;font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:3px;}
+.meta-item span{font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--text);}
+
+.error-card{background:#fff;border:1px solid #FFCDD2;border-radius:16px;
+  padding:32px;text-align:center;color:var(--red);}
+.spinner{display:inline-block;width:32px;height:32px;border:3px solid #E2E8F0;
+  border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="../index.html">Assign<span>Eval</span></a>
+  <a class="hbtn" href="../index.html">← Home</a>
+</header>
+
+<div class="wrap">
+
+  <!-- Lookup Form -->
+  <div class="lookup-card">
+    <h2>🔍 Check Your Result</h2>
+    <p>Enter your Assignment ID and Roll Number to see your marks and feedback.</p>
+    <div class="form-row">
+      <div class="fgroup">
+        <label>Assignment ID</label>
+        <input type="text" id="aId" placeholder="e.g. 5985C2A8"
+          style="text-transform:uppercase">
+      </div>
+      <div class="fgroup">
+        <label>Your Roll Number</label>
+        <input type="text" id="rollNo" placeholder="e.g. RA2511047020051">
+      </div>
+    </div>
+    <button class="lookup-btn" onclick="lookup()">Check My Result →</button>
+  </div>
+
+  <div id="resultWrap"></div>
+
+</div>
+
+<script>
+const API = window.location.hostname === "localhost"
+  ? "http://localhost:5000/api"
+  : window.location.origin + "/api";
+
+// Pre-fill from URL params if present
+const params = new URLSearchParams(location.search);
+if (params.get("assignment_id")) document.getElementById("aId").value = params.get("assignment_id");
+if (params.get("roll"))          document.getElementById("rollNo").value = params.get("roll");
+if (params.get("assignment_id") && params.get("roll")) lookup();
+
+async function lookup() {
+  const aid  = document.getElementById("aId").value.trim().toUpperCase();
+  const roll = document.getElementById("rollNo").value.trim();
+  if (!aid || !roll) { alert("Please enter both Assignment ID and Roll Number"); return; }
+
+  document.getElementById("resultWrap").innerHTML =
+    `<div style="text-align:center;padding:32px"><div class="spinner"></div></div>`;
+
+  try {
+    const res = await fetch(`${API}/student/result/${aid}/${roll}`);
+    const d   = await res.json();
+    if (!res.ok) throw new Error(d.error || "Not found");
+    renderResult(d);
+  } catch(e) {
+    document.getElementById("resultWrap").innerHTML = `
+      <div class="error-card">
+        <div style="font-size:40px;margin-bottom:12px;">🔍</div>
+        <strong>${e.message}</strong><br>
+        <small style="color:var(--muted);">Check your Assignment ID and Roll Number and try again.</small>
+      </div>`;
+  }
+}
+
+function renderResult(s) {
+  const final = s.teacher_marks ?? s.ai_marks ?? 0;
+  const max   = s.max_marks || 100;
+  const pct   = Math.round((final / max) * 100);
+  const grade = getGrade(pct);
+  const color = gradeColor(pct);
+  const circ  = 2 * Math.PI * 52;
+  const dash  = (pct / 100) * circ;
+
+  // Type notice
+  const typeMap = {
+    handwritten: { icon:"✍", text:"Your submission was identified as handwritten. AI used image recognition to read your answers.", cls:"type-notice-hw" },
+    mixed:       { icon:"📄", text:"Your submission was identified as mixed (typed + diagrams). AI evaluated the text portions.", cls:"type-notice-mixed" },
+    typed:       { icon:"⌨", text:"Your submission was identified as a typed/digital PDF.", cls:"type-notice-typed" }
+  };
+  const tm = typeMap[s.submission_type] || typeMap.typed;
+
+  // Breakdown
+  const breakdown = Array.isArray(s.ai_breakdown) ? s.ai_breakdown : [];
+  const breakdownHTML = breakdown.length ? `
+    <div class="section-wrap">
+      <div class="section-title">📊 Marks Breakdown — Question by Question</div>
+      ${breakdown.map(q => {
+        const qpct = Math.round(((q.awarded_marks||0) / (q.max_marks||1)) * 100);
+        const qcolor = gradeColor(qpct);
+        return `
+        <div class="bk-row">
+          <div>
+            <div class="bk-q">${q.question || "Section"}</div>
+            ${q.what_was_correct ? `<div class="bk-correct">✓ ${q.what_was_correct}</div>` : ""}
+            ${q.what_was_missing ? `<div class="bk-missing">✗ ${q.what_was_missing}</div>` : ""}
+            ${q.reason ? `<div class="bk-reason">${q.reason}</div>` : ""}
+          </div>
+          <div class="bk-marks">
+            <div class="bk-marks-num" style="color:${qcolor}">${q.awarded_marks ?? "—"}</div>
+            <div class="bk-marks-max">/ ${q.max_marks ?? "—"}</div>
+            <div class="bk-bar"><div class="bk-bar-fill" style="width:${qpct}%;background:${qcolor}"></div></div>
+          </div>
+        </div>`;
+      }).join("")}
+    </div>` : "";
+
+  // Pending notice
+  const pendingHTML = !s.teacher_approved ? `
+    <div class="pending-notice">
+      <strong>⏳ Marks Pending Teacher Approval</strong>
+      These are the AI-evaluated marks. Your teacher will review and confirm the final score.
+      Marks shown here are provisional and may change.
+    </div>` : "";
+
+  // Feedback — show teacher's if overridden, else AI
+  const feedback = s.teacher_feedback || s.ai_feedback || "No feedback available.";
+  const feedbackLabel = s.teacher_feedback
+    ? "✏️ Teacher Feedback"
+    : "🤖 AI Feedback";
+
+  const sourceTag = s.teacher_marks != null
+    ? `<span class="score-source source-teacher">✏ Teacher Verified</span>`
+    : `<span class="score-source source-ai">🤖 AI Evaluated · Pending Approval</span>`;
+
+  document.getElementById("resultWrap").innerHTML = `
+    <div class="result-card">
+
+      <div class="result-header">
+        <h3>${s.title}</h3>
+        <div class="result-header-sub">${s.subject} · ${s.teacher_name}</div>
+      </div>
+
+      <!-- Score Hero -->
+      <div class="score-hero">
+        <div class="big-ring">
+          <svg width="120" height="120" viewBox="0 0 120 120">
+            <circle class="ring-bg" cx="60" cy="60" r="52"/>
+            <circle class="ring-fill" cx="60" cy="60" r="52"
+              stroke="${color}"
+              stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}"/>
+          </svg>
+          <div class="ring-inner">
+            <span class="ring-marks" style="color:${color}">${final}</span>
+            <span class="ring-denom">/ ${max}</span>
+          </div>
+        </div>
+        <div class="score-details">
+          <div class="score-pct" style="color:${color}">${pct}%</div>
+          <div class="score-grade" style="color:${color}">${grade.label}</div>
+          <div class="score-cgpa">Grade Points: ${grade.points} / 10</div>
+          ${sourceTag}
+        </div>
+      </div>
+
+      <!-- Type Notice -->
+      <div class="type-notice ${tm.cls}">
+        <span style="font-size:18px;">${tm.icon}</span>
+        <span>${tm.text}</span>
+      </div>
+
+      <!-- Breakdown -->
+      ${breakdownHTML}
+
+      <!-- Feedback -->
+      <div class="feedback-wrap">
+        ${pendingHTML}
+        <div class="section-title" style="margin-bottom:12px;">${feedbackLabel}</div>
+        <div class="feedback-box">${feedback.replace(/\n/g,"<br>")}</div>
+      </div>
+
+      <!-- Meta -->
+      <div class="meta-row">
+        <div class="meta-item"><label>Student</label><span>${s.student_name}</span></div>
+        <div class="meta-item"><label>Roll Number</label><span>${s.roll_number}</span></div>
+        <div class="meta-item"><label>Submission ID</label><span>${s.submission_id}</span></div>
+        <div class="meta-item"><label>Submitted At</label><span>${new Date(s.submitted_at).toLocaleString()}</span></div>
+        <div class="meta-item"><label>Type</label><span>${s.submission_type.toUpperCase()}</span></div>
+      </div>
+
+    </div>`;
+}
+
+function getGrade(pct) {
+  if (pct >= 90) return { label:"O — Outstanding",   points:10 };
+  if (pct >= 80) return { label:"A+ — Excellent",    points:9  };
+  if (pct >= 70) return { label:"A — Very Good",     points:8  };
+  if (pct >= 60) return { label:"B+ — Good",         points:7  };
+  if (pct >= 50) return { label:"B — Above Average", points:6  };
+  if (pct >= 40) return { label:"C — Average",       points:5  };
+  return               { label:"F — Fail",           points:0  };
+}
+
+function gradeColor(pct) {
+  if (pct >= 75) return "#2E7D32";
+  if (pct >= 50) return "#F57F17";
+  return "#C62828";
+}
+</script>
+</body>
+</html>
