@@ -171,21 +171,29 @@ def admin_stats():
 # ── TEACHER ───────────────────────────────────────────────────────────────────
 @app.route("/api/teacher/create-assignment", methods=["POST"])
 def create_assignment():
-    data = request.get_json()
-    for f in ["title","subject","max_marks","deadline","rubric","teacher_name"]:
-        if not data.get(f): return jsonify({"error":f"Missing: {f}"}), 400
-    teacher_id = None
-    token = request.headers.get("Authorization","").replace("Bearer ","").strip()
-    if token:
-        try: teacher_id = decode_token(token)["user_id"]
-        except: pass
-    aid = str(uuid.uuid4())[:8].upper()
-    db  = get_db()
-    db.execute("INSERT INTO assignments (assignment_id,title,subject,max_marks,deadline,rubric,teacher_name,teacher_id,institution,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
-        (aid,data["title"],data["subject"],data["max_marks"],data["deadline"],
-         data["rubric"],data["teacher_name"],teacher_id,data.get("institution",""),datetime.now().isoformat()))
-    db.commit()
-    return jsonify({"success":True,"assignment_id":aid})
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No JSON body received"}), 400
+        for f in ["title","subject","max_marks","deadline","rubric","teacher_name"]:
+            if not data.get(f): return jsonify({"error":f"Missing field: {f}"}), 400
+        teacher_id = None
+        token = request.headers.get("Authorization","").replace("Bearer ","").strip()
+        if token:
+            try: teacher_id = decode_token(token)["user_id"]
+            except: pass
+        aid = str(uuid.uuid4())[:8].upper()
+        db  = get_db()
+        db.execute("INSERT INTO assignments (assignment_id,title,subject,max_marks,deadline,rubric,teacher_name,teacher_id,institution,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+            (aid,data["title"],data["subject"],data["max_marks"],data["deadline"],
+             data["rubric"],data["teacher_name"],teacher_id,data.get("institution",""),datetime.now().isoformat()))
+        db.commit()
+        db.close()
+        print(f"[Create Assignment] Created {aid} for {data['teacher_name']}")
+        return jsonify({"success":True,"assignment_id":aid})
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 @app.route("/api/teacher/assignments/<teacher_name>")
 def get_teacher_assignments(teacher_name):
