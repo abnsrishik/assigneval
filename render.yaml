@@ -2,10 +2,12 @@ services:
   - type: web
     name: assigneval
     runtime: python
-    buildCommand: pip install -r backend/requirements.txt
-    startCommand: cd backend && gunicorn app:app
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
     envVars:
       - key: GROQ_API_KEY
         sync: false
       - key: JWT_SECRET
-        generateValue: true
+        sync: false
+    autoDeploy: true
