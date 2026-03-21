@@ -13,6 +13,19 @@ CORS(app, supports_credentials=True)
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+
+# ── HEALTH CHECK (test this in browser to verify API works) ──────────────────
+@app.route("/api/health")
+def health():
+    import os
+    groq_key = os.environ.get("GROQ_API_KEY", "")
+    return jsonify({
+        "status": "ok",
+        "groq_key_set": bool(groq_key),
+        "groq_key_prefix": groq_key[:8] + "..." if groq_key else "NOT SET",
+        "message": "AssignEval API is running"
+    })
+
 # ── Static ────────────────────────────────────────────────────────────────────
 @app.route("/")
 def index(): return send_from_directory("../frontend","index.html")
@@ -288,7 +301,12 @@ Respond in JSON only:
         return jsonify({"success":True,"questions":result.get("questions",[]),"rubric_text":rubric_text,"evaluation_notes":eval_notes})
     except Exception as e:
         import traceback; traceback.print_exc()
-        return jsonify({"error":f"Failed: {str(e)[:200]}"}), 500
+        err_msg = str(e)
+        if "api_key" in err_msg.lower() or "authentication" in err_msg.lower() or "401" in err_msg:
+            return jsonify({"error": "Groq API key is invalid or not set on the server. Contact admin."}), 500
+        if "timeout" in err_msg.lower():
+            return jsonify({"error": "AI took too long to respond. Please try again."}), 500
+        return jsonify({"error": f"Failed: {err_msg[:200]}"}), 500
 
 @app.route("/api/teacher/rubric-templates", methods=["GET"])
 def get_rubric_templates():
@@ -461,4 +479,4 @@ if __name__ == "__main__":
     print("🚀  AssignEval → http://localhost:5000")
     print("    Login page → http://localhost:5000/pages/login.html")
     print("="*50)
-    app.run(debug=True, port=5000, host="0.0.0.0")
+    app.run(debug=False, port=int(os.environ.get("PORT", 5000)), host="0.0.0.0")

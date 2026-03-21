@@ -617,7 +617,11 @@ async function generateRubric() {
     document.getElementById("rubricPreview").scrollIntoView({ behavior: "smooth" });
 
   } catch(e) {
-    alert("Error generating rubric: " + e.message);
+    let msg = e.message;
+    if (msg === "Failed to fetch") {
+      msg = "Cannot reach the server. The server may be waking up (takes 30-60s on free tier). Please wait and try again.";
+    }
+    alert("Error generating rubric: " + msg);
   }
   btn.disabled = false;
   btn.innerHTML = "✨ Generate Rubric with AI";
