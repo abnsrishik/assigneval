@@ -492,9 +492,11 @@ def _backup_database():
     except Exception as e: print(f"[Backup] {e}")
 
 # ── START ─────────────────────────────────────────────────────────────────────
+# ── Run init_db at module load so gunicorn creates tables on startup ──────────
+init_db()
+_backup_database()
+
 if __name__ == "__main__":
-    init_db()
-    _backup_database()
     print("="*50)
     print("🚀  AssignEval → http://localhost:5000")
     print("    Login page → http://localhost:5000/pages/login.html")
