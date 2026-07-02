@@ -487,12 +487,8 @@ window.onload = () => {
     return;
   }
 
-  // Legacy: if old teacher_name saved, still works
-  const saved = localStorage.getItem("teacher_name");
-  if (saved && saved.length > 1) {
-    enterDashboard(saved);
-    return;
-  }
+  // No valid token — redirect to login
+  window.location.href = "/pages/login.html";
 
   // Show login screen (legacy name login still works)
   const d = new Date(); d.setDate(d.getDate() + 7);
