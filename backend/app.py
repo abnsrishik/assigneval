@@ -1,11 +1,11 @@
-from flask import Flask, request, jsonify, send_file, send_from_directory
+from flask import Flask, request, jsonify, send_file, send_from_directory, g
 from flask_cors import CORS
 import os, uuid, json, shutil
 from datetime import datetime
 from database import init_db, get_db
 from evaluator import evaluate_submission
 from excel_generator import generate_excel
-from auth import hash_password, check_password, create_token, require_auth, require_teacher, require_admin, decode_token
+from auth import hash_password, check_password, create_token, require_auth, require_teacher, require_admin
 import fitz
 
 app = Flask(__name__, static_folder="../frontend", static_url_path="")
@@ -14,15 +14,25 @@ UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
-# ── HEALTH CHECK (test this in browser to verify API works) ──────────────────
+# ── Database — one connection per request, auto-closed on teardown ────────────
+def _get_db():
+    if "db" not in g:
+        g.db = get_db()
+    return g.db
+
+@app.teardown_appcontext
+def _close_db(exc):
+    db = g.pop("db", None)
+    if db is not None:
+        db.close()
+
+
+# ── HEALTH CHECK ──────────────────────────────────────────────────────────────
 @app.route("/api/health")
 def health():
-    import os
-    groq_key = os.environ.get("GROQ_API_KEY", "")
     return jsonify({
         "status": "ok",
-        "groq_key_set": bool(groq_key),
-        "groq_key_prefix": groq_key[:8] + "..." if groq_key else "NOT SET",
+        "groq_configured": bool(os.environ.get("GROQ_API_KEY", "")),
         "message": "AssignEval API is running"
     })
 
@@ -59,7 +69,7 @@ def register():
     for f in ["username","email","password","full_name"]:
         if not data.get(f): return jsonify({"error": f"Missing: {f}"}), 400
     if len(data["password"]) < 6: return jsonify({"error":"Password must be at least 6 characters"}), 400
-    db = get_db()
+    db = _get_db()
     if db.execute("SELECT id FROM users WHERE email=?",(data["email"],)).fetchone():
         return jsonify({"error":"Email already registered"}), 409
     if db.execute("SELECT id FROM users WHERE username=?",(data["username"],)).fetchone():
@@ -78,7 +88,7 @@ def login():
     data = request.get_json()
     if not data.get("email") or not data.get("password"):
         return jsonify({"error":"Email and password required"}), 400
-    db = get_db()
+    db = _get_db()
     user = db.execute("SELECT * FROM users WHERE email=?",(data["email"],)).fetchone()
     if not user or not check_password(data["password"],user["password"]):
         return jsonify({"error":"Invalid email or password"}), 401
@@ -98,7 +108,7 @@ def student_register():
     data = request.get_json()
     for f in ["roll_number","email","password","full_name"]:
         if not data.get(f): return jsonify({"error":f"Missing: {f}"}), 400
-    db = get_db()
+    db = _get_db()
     if db.execute("SELECT id FROM users WHERE username=?",(data["roll_number"],)).fetchone():
         return jsonify({"error":"Roll number already registered"}), 409
     if db.execute("SELECT id FROM users WHERE email=?",(data["email"],)).fetchone():
@@ -114,7 +124,7 @@ def student_register():
 @app.route("/api/auth/me")
 @require_auth
 def get_me():
-    db = get_db()
+    db = _get_db()
     user = db.execute("SELECT id,username,email,role,full_name,institution,department,last_login FROM users WHERE id=?",
                       (request.user_id,)).fetchone()
     if not user: return jsonify({"error":"User not found"}), 404
@@ -128,7 +138,7 @@ def change_password():
         return jsonify({"error":"Both passwords required"}), 400
     if len(data["new_password"]) < 6:
         return jsonify({"error":"New password must be at least 6 characters"}), 400
-    db   = get_db()
+    db   = _get_db()
     user = db.execute("SELECT * FROM users WHERE id=?",(request.user_id,)).fetchone()
     if not check_password(data["current_password"],user["password"]):
         return jsonify({"error":"Current password is incorrect"}), 401
@@ -140,14 +150,14 @@ def change_password():
 @app.route("/api/admin/users")
 @require_admin
 def admin_list_users():
-    db = get_db()
+    db = _get_db()
     rows = db.execute("SELECT id,username,email,role,full_name,institution,department,is_active,created_at,last_login FROM users ORDER BY created_at DESC").fetchall()
     return jsonify([dict(r) for r in rows])
 
 @app.route("/api/admin/users/<int:user_id>/toggle", methods=["POST"])
 @require_admin
 def admin_toggle_user(user_id):
-    db   = get_db()
+    db   = _get_db()
     user = db.execute("SELECT is_active FROM users WHERE id=?",(user_id,)).fetchone()
     if not user: return jsonify({"error":"Not found"}), 404
     new  = 0 if user["is_active"] else 1
@@ -158,7 +168,7 @@ def admin_toggle_user(user_id):
 @app.route("/api/admin/stats")
 @require_admin
 def admin_stats():
-    db = get_db()
+    db = _get_db()
     return jsonify({
         "total_users":       db.execute("SELECT COUNT(*) FROM users").fetchone()[0],
         "total_teachers":    db.execute("SELECT COUNT(*) FROM users WHERE role='teacher'").fetchone()[0],
@@ -170,6 +180,7 @@ def admin_stats():
 
 # ── TEACHER ───────────────────────────────────────────────────────────────────
 @app.route("/api/teacher/create-assignment", methods=["POST"])
+@require_teacher
 def create_assignment():
     try:
         data = request.get_json()
@@ -177,18 +188,12 @@ def create_assignment():
             return jsonify({"error": "No JSON body received"}), 400
         for f in ["title","subject","max_marks","deadline","rubric","teacher_name"]:
             if not data.get(f): return jsonify({"error":f"Missing field: {f}"}), 400
-        teacher_id = None
-        token = request.headers.get("Authorization","").replace("Bearer ","").strip()
-        if token:
-            try: teacher_id = decode_token(token)["user_id"]
-            except: pass
         aid = str(uuid.uuid4())[:8].upper()
-        db  = get_db()
+        db  = _get_db()
         db.execute("INSERT INTO assignments (assignment_id,title,subject,max_marks,deadline,rubric,teacher_name,teacher_id,institution,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
             (aid,data["title"],data["subject"],data["max_marks"],data["deadline"],
-             data["rubric"],data["teacher_name"],teacher_id,data.get("institution",""),datetime.now().isoformat()))
+             data["rubric"],data["teacher_name"],request.user_id,data.get("institution",""),datetime.now().isoformat()))
         db.commit()
-        db.close()
         print(f"[Create Assignment] Created {aid} for {data['teacher_name']}")
         return jsonify({"success":True,"assignment_id":aid})
     except Exception as e:
@@ -196,8 +201,9 @@ def create_assignment():
         return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 @app.route("/api/teacher/assignments/<teacher_name>")
+@require_teacher
 def get_teacher_assignments(teacher_name):
-    db   = get_db()
+    db   = _get_db()
     rows = db.execute("""
         SELECT a.*, COUNT(s.id) as submission_count,
         SUM(CASE WHEN (s.teacher_approved=0 OR s.teacher_approved IS NULL) AND s.ai_marks IS NOT NULL THEN 1 ELSE 0 END) as pending_review
@@ -212,8 +218,9 @@ def get_teacher_assignments(teacher_name):
     return jsonify(result)
 
 @app.route("/api/teacher/results/<assignment_id>")
+@require_teacher
 def get_results(assignment_id):
-    db   = get_db()
+    db   = _get_db()
     a    = db.execute("SELECT * FROM assignments WHERE assignment_id=?",(assignment_id,)).fetchone()
     if not a: return jsonify({"error":"Not found"}), 404
     subs = db.execute("SELECT * FROM submissions WHERE assignment_id=? ORDER BY submitted_at DESC",(assignment_id,)).fetchall()
@@ -222,31 +229,33 @@ def get_results(assignment_id):
     for s in subs:
         d = dict(s)
         try: d["ai_breakdown"] = json.loads(d["ai_breakdown"]) if d.get("ai_breakdown") else []
-        except: d["ai_breakdown"] = []
+        except Exception: d["ai_breakdown"] = []
         d["final_marks"] = d["teacher_marks"] if d.get("teacher_marks") is not None else d.get("ai_marks",0)
         d["max_marks"]   = real_max
         result.append(d)
     return jsonify({"assignment":dict(a),"submissions":result})
 
 @app.route("/api/teacher/submission/<submission_id>")
+@require_teacher
 def get_single_submission(submission_id):
-    db  = get_db()
+    db  = _get_db()
     row = db.execute("""SELECT s.*, a.title, a.subject, a.rubric, a.teacher_name, a.max_marks as assignment_max
         FROM submissions s JOIN assignments a ON s.assignment_id=a.assignment_id
         WHERE s.submission_id=?""",(submission_id,)).fetchone()
     if not row: return jsonify({"error":"Not found"}), 404
     d = dict(row)
     try: d["ai_breakdown"] = json.loads(d["ai_breakdown"]) if d.get("ai_breakdown") else []
-    except: d["ai_breakdown"] = []
+    except Exception: d["ai_breakdown"] = []
     d["final_marks"] = d["teacher_marks"] if d.get("teacher_marks") is not None else d.get("ai_marks",0)
     d["max_marks"]   = d.get("assignment_max") or d.get("max_marks") or 100
     return jsonify(d)
 
 @app.route("/api/teacher/review/<submission_id>", methods=["POST"])
+@require_teacher
 def teacher_review(submission_id):
     data   = request.get_json()
     action = data.get("action")
-    db     = get_db()
+    db     = _get_db()
     sub    = db.execute("SELECT * FROM submissions WHERE submission_id=?",(submission_id,)).fetchone()
     if not sub: return jsonify({"error":"Not found"}), 404
     sub = dict(sub)
@@ -265,8 +274,9 @@ def teacher_review(submission_id):
     return jsonify({"success":True})
 
 @app.route("/api/teacher/download-excel/<assignment_id>")
+@require_teacher
 def download_excel(assignment_id):
-    db   = get_db()
+    db   = _get_db()
     a    = db.execute("SELECT * FROM assignments WHERE assignment_id=?",(assignment_id,)).fetchone()
     if not a: return jsonify({"error":"Not found"}), 404
     subs = db.execute("SELECT * FROM submissions WHERE assignment_id=?",(assignment_id,)).fetchall()
@@ -280,13 +290,15 @@ def download_excel(assignment_id):
     return send_file(fp, as_attachment=True, download_name=f"Results_{assignment_id}.xlsx")
 
 @app.route("/api/teacher/view-pdf/<submission_id>")
+@require_teacher
 def view_pdf(submission_id):
-    db  = get_db()
+    db  = _get_db()
     sub = db.execute("SELECT filename FROM submissions WHERE submission_id=?",(submission_id,)).fetchone()
     if not sub: return jsonify({"error":"Not found"}), 404
     return send_from_directory(UPLOAD_FOLDER, sub["filename"])
 
 @app.route("/api/teacher/generate-rubric", methods=["POST"])
+@require_teacher
 def generate_rubric():
     data      = request.get_json()
     questions = data.get("questions","").strip()
@@ -329,30 +341,28 @@ Respond in JSON only:
         return jsonify({"error": f"Failed: {err_msg[:200]}"}), 500
 
 @app.route("/api/teacher/rubric-templates", methods=["GET"])
+@require_teacher
 def get_rubric_templates():
-    db   = get_db()
+    db   = _get_db()
     rows = db.execute("SELECT * FROM rubric_templates ORDER BY created_at DESC").fetchall()
     return jsonify([dict(r) for r in rows])
 
 @app.route("/api/teacher/rubric-templates", methods=["POST"])
+@require_teacher
 def save_rubric_template():
     data = request.get_json()
     if not data.get("name") or not data.get("rubric_text"):
         return jsonify({"error":"Name and rubric_text required"}), 400
-    teacher_id = None
-    token = request.headers.get("Authorization","").replace("Bearer ","").strip()
-    if token:
-        try: teacher_id = decode_token(token)["user_id"]
-        except: pass
-    db = get_db()
+    db = _get_db()
     db.execute("INSERT INTO rubric_templates (name,subject,rubric_text,teacher_id,is_public,created_at) VALUES (?,?,?,?,?,?)",
-        (data["name"],data.get("subject",""),data["rubric_text"],teacher_id,1 if data.get("is_public") else 0,datetime.now().isoformat()))
+        (data["name"],data.get("subject",""),data["rubric_text"],request.user_id,1 if data.get("is_public") else 0,datetime.now().isoformat()))
     db.commit()
     return jsonify({"success":True})
 
 @app.route("/api/teacher/rubric-templates/<int:tid>", methods=["DELETE"])
+@require_teacher
 def delete_rubric_template(tid):
-    db = get_db()
+    db = _get_db()
     db.execute("DELETE FROM rubric_templates WHERE id=?",(tid,))
     db.commit()
     return jsonify({"success":True})
@@ -360,7 +370,7 @@ def delete_rubric_template(tid):
 # ── STUDENT ───────────────────────────────────────────────────────────────────
 @app.route("/api/assignment/<assignment_id>")
 def get_assignment_info(assignment_id):
-    db = get_db()
+    db = _get_db()
     a  = db.execute("SELECT assignment_id,title,subject,max_marks,deadline,teacher_name FROM assignments WHERE assignment_id=?",(assignment_id,)).fetchone()
     if not a: return jsonify({"error":"Assignment not found"}), 404
     d  = dict(a)
@@ -371,7 +381,7 @@ def get_assignment_info(assignment_id):
 
 @app.route("/api/submit/<assignment_id>", methods=["POST"])
 def submit_assignment(assignment_id):
-    db = get_db()
+    db = _get_db()
     a  = db.execute("SELECT * FROM assignments WHERE assignment_id=?",(assignment_id,)).fetchone()
     if not a: return jsonify({"error":"Assignment not found"}), 404
     a  = dict(a)
@@ -434,14 +444,14 @@ def submit_assignment(assignment_id):
 
 @app.route("/api/student/result/<assignment_id>/<roll_number>")
 def get_student_result(assignment_id, roll_number):
-    db  = get_db()
+    db  = _get_db()
     row = db.execute("""SELECT s.*, a.title, a.subject, a.teacher_name
         FROM submissions s JOIN assignments a ON s.assignment_id=a.assignment_id
         WHERE s.assignment_id=? AND s.roll_number=?""",(assignment_id,roll_number)).fetchone()
     if not row: return jsonify({"error":"No submission found for this roll number"}), 404
     d = dict(row)
     try: d["ai_breakdown"] = json.loads(d["ai_breakdown"]) if d.get("ai_breakdown") else []
-    except: d["ai_breakdown"] = []
+    except Exception: d["ai_breakdown"] = []
     d["final_marks"]      = d["teacher_marks"] if d.get("teacher_marks") is not None else d.get("ai_marks",0)
     d["max_marks"]        = d.get("max_marks") or 100
     d["display_feedback"] = d.get("teacher_feedback") or d.get("ai_feedback","")
@@ -450,7 +460,7 @@ def get_student_result(assignment_id, roll_number):
 @app.route("/api/student/my-submissions")
 @require_auth
 def my_submissions():
-    db   = get_db()
+    db   = _get_db()
     roll = request.username
     rows = db.execute("""SELECT s.submission_id,s.assignment_id,s.submitted_at,
         s.final_marks,s.max_marks,s.teacher_approved,s.needs_review,s.submission_type,

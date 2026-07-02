@@ -7,9 +7,18 @@ from datetime import datetime, timedelta
 from functools import wraps
 from flask import request, jsonify
 
-# ── Secret key — change this in production! ──────────────────────────────────
-SECRET_KEY = os.environ.get("JWT_SECRET", "assigneval-secret-change-in-production-2026")
+# ── Secret key ───────────────────────────────────────────────────────────────
+_DEFAULT_SECRET = "assigneval-secret-change-in-production-2026"
+SECRET_KEY = os.environ.get("JWT_SECRET", _DEFAULT_SECRET)
 TOKEN_EXPIRY_DAYS = 7
+
+if SECRET_KEY == _DEFAULT_SECRET:
+    import warnings
+    warnings.warn(
+        "JWT_SECRET is not set — using insecure default. "
+        "Set JWT_SECRET env var before deploying to production.",
+        stacklevel=2
+    )
 
 
 # ── Password helpers ──────────────────────────────────────────────────────────

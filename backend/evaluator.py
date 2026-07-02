@@ -1,4 +1,3 @@
-import os
 """
 AI Evaluator — Groq API
 Handles typed, handwritten, and photo-based PDFs correctly.

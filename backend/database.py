@@ -80,7 +80,8 @@ def _migrate(db):
     try:
         _add_cols(db,"users",{"full_name":"TEXT","institution":"TEXT",
                                "department":"TEXT","is_active":"INTEGER DEFAULT 1","last_login":"TEXT"})
-    except: pass
+    except Exception as e:
+        print(f"[Migrate] users column migration note: {e}")
 
 def _add_cols(db, table, cols):
     existing = {r[1] for r in db.execute(f"PRAGMA table_info({table})")}
